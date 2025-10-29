@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+	<ImplicitUsings>enabled</ImplicitUsings>
+    <RootNamespace>DouglasDwyer.Dozer</RootNamespace>
+    <AssemblyName>DouglasDwyer.Dozer</AssemblyName>
+    <Authors>Douglas Dwyer</Authors>
+    <Company>Douglas Dwyer</Company>
+    <Product>Dozer</Product>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Dozer is a fast, efficient, customizable C# binary serializer that can serialize absolutely anything.</Description>
+    <PackageProjectUrl>https://github.com/DouglasDwyer/Dozer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/DouglasDwyer/Dozer</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <NeutralLanguage>en</NeutralLanguage>
+    <AssemblyVersion>2.0.0</AssemblyVersion>
+    <FileVersion>2.0.0</FileVersion>
+	<Version>2.0.0</Version>
+	<PackageReleaseNotes></PackageReleaseNotes>
+	<PackageTags>serialization csharp binary collections arrays polymorphism serialization-library csharp-library</PackageTags>
+	<Nullable>enable</Nullable>
+	<WarningsAsErrors>Nullable</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FastExpressionCompiler" Version="5.3.0" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.10" />
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
+    <PackageReference Include="System.IO.Hashing" Version="9.0.10" />
+  </ItemGroup>
+</Project>
