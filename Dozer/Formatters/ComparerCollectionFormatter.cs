@@ -95,11 +95,31 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
     {
         writer.WriteVarUInt32((uint)value.Count);
 
-        _comparerFormatter.Serialize(writer, _getComparer(value));
+        var comparer = _getComparer(value);
+        _comparerFormatter.Serialize(writer, IsDefaultInternalComparer(comparer) ? null : comparer);
 
         foreach (var element in value)
         {
             _elementFormatter.Serialize(writer, element);
+        }
+    }
+
+    /// <summary>
+    /// Determines whether <paramref name="comparer"/> is the default, system-internal comparer for
+    /// keys of type <typeparamref name="K"/>.
+    /// </summary>
+    /// <param name="comparer">The comparer in question, if any.</param>
+    /// <returns>Whether it is the default when <typeparamref name="A"/> is constructed without a comparer.</returns>
+    private static bool IsDefaultInternalComparer(object? comparer)
+    {
+        if (comparer is null)
+        {
+            return false;
+        }
+        else
+        {
+            var comparerType = comparer.GetType();
+            return !comparerType.IsPublic && comparerType.Assembly == typeof(object).Assembly;
         }
     }
 }

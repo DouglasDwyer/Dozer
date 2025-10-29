@@ -27,6 +27,11 @@ public class MemberFormatter<T> : IFormatter<T>
                 throw new ArgumentException("Member-formatted types must have public parameterless constructor", nameof(T));
             }
 
+            if (!typeof(T).IsPublic)
+            {
+                throw new ArgumentException("The constructor should ACTUALLY be public lol");
+            }
+
             var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy | BindingFlags.NonPublic);
             var entries = GetEntries(serializer, typeof(T), fields);
 
