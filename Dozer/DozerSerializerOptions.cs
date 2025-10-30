@@ -3,7 +3,6 @@ using DouglasDwyer.Dozer.Resolvers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.Loader;
 
 namespace DouglasDwyer.Dozer;
 
@@ -14,7 +13,7 @@ public class DozerSerializerOptions
     /// This object can be used to control the loading process (and may be useful when deserializing data
     /// with dynamically-loaded assemblies or plugins).
     /// </summary>
-    public AssemblyLoadContext AssemblyLoader { get; set; } = AssemblyLoadContext.GetLoadContext(Assembly.GetCallingAssembly()) ?? AssemblyLoadContext.Default;
+    public IAssemblyLoader AssemblyLoader { get; set; } = new ContextAssemblyLoader();
 
     /// <summary>
     /// A predefined list of assemblies that are guaranteed to be present during serialization

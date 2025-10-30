@@ -15,7 +15,7 @@ public sealed class AssemblyFormatter : IFormatter<Assembly>
     /// <summary>
     /// Where to find new assemblies.
     /// </summary>
-    private readonly AssemblyLoadContext _assemblyLoader;
+    private readonly IAssemblyLoader _loader;
 
     /// <summary>
     /// A mapping for shortening well-known assembly names to 8-byte IDs.
@@ -30,7 +30,7 @@ public sealed class AssemblyFormatter : IFormatter<Assembly>
     /// </param>
     public AssemblyFormatter(DozerSerializer serializer)
     {
-        _assemblyLoader = serializer.Options.AssemblyLoader;
+        _loader = serializer.Options.AssemblyLoader;
         _knownAssemblies = new NameMap<Assembly>(serializer.Options.KnownAssemblies.Where(x => !x.IsDynamic), x => x.GetName().Name!);
     }
 
@@ -50,7 +50,7 @@ public sealed class AssemblyFormatter : IFormatter<Assembly>
         {
             var name = reader.ReadString();
             var version = new Version(reader.ReadVarInt32(), reader.ReadVarInt32(), reader.ReadVarInt32(), reader.ReadVarInt32());
-            value = _assemblyLoader.LoadFromAssemblyName(new AssemblyName() { Name = name, Version = version });
+            value = _loader.Load(new AssemblyName() { Name = name, Version = version });
         }
     }
 
