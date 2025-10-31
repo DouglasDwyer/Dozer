@@ -11,7 +11,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes a type by iterating over its individual members and serializing them.
 /// </summary>
-public class MemberFormatter<T> : IFormatter<T>
+public class ByMembersFormatter<T> : IFormatter<T>
 {
     /// <summary>
     /// The function type that is created for deserialization.
@@ -42,7 +42,7 @@ public class MemberFormatter<T> : IFormatter<T>
     /// </summary>
     /// <param name="serializer">The associated serializer.</param>
     /// <exception cref="ArgumentException">If <typeparamref name="T"/> did not have a configuration from <paramref name="serializer"/>.</exception>
-    public MemberFormatter(DozerSerializer serializer)
+    public ByMembersFormatter(DozerSerializer serializer)
     {
         var config = serializer.GetTypeConfig(typeof(T));
 
@@ -72,7 +72,7 @@ public class MemberFormatter<T> : IFormatter<T>
     /// </summary>
     /// <param name="config">The configuration of the type to serialize.</param>
     /// <returns>A delegate that can be called to deserialize the type.</returns>
-    private static DeserializeDelegate CompileDeserializer(TypeConfig config)
+    private static DeserializeDelegate CompileDeserializer(ByMembersConfig config)
     {
         var readerParam = Expression.Parameter(typeof(BufferReader), "reader");
         var valueParam = Expression.Parameter(config.Target.MakeByRefType(), "value");
@@ -87,7 +87,7 @@ public class MemberFormatter<T> : IFormatter<T>
     /// </summary>
     /// <param name="config">The configuration of the type to serialize.</param>
     /// <returns>A delegate that can be called to serialize the type.</returns>
-    private static SerializeDelegate CompileSerializer(TypeConfig config)
+    private static SerializeDelegate CompileSerializer(ByMembersConfig config)
     {
         var writerParam = Expression.Parameter(typeof(BufferWriter), "writer");
         var valueParam = Expression.Parameter(config.Target.MakeByRefType(), "value");
@@ -140,7 +140,7 @@ public class MemberFormatter<T> : IFormatter<T>
     /// <returns>
     /// The expression that was created.
     /// </returns>
-    private static Expression CreateDeserializeExpression(TypeConfig.Member entry, Expression reader, Expression value)
+    private static Expression CreateDeserializeExpression(ByMembersConfig.Member entry, Expression reader, Expression value)
     {
         switch (entry.Info)
         {
@@ -181,7 +181,7 @@ public class MemberFormatter<T> : IFormatter<T>
     /// <returns>
     /// The expression that was created.
     /// </returns>
-    private static Expression CreateSerializeExpression(TypeConfig.Member entry, Expression writer, Expression value)
+    private static Expression CreateSerializeExpression(ByMembersConfig.Member entry, Expression writer, Expression value)
     {
         switch (entry.Info)
         {

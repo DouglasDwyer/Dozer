@@ -1,22 +1,16 @@
 ﻿using DouglasDwyer.Dozer.Formatters;
-using DouglasDwyer.Dozer.Resolvers;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace DouglasDwyer.Dozer;
-
-// todo: better name to emphasize that this is by-member configuration
 
 /// <summary>
 /// Controls by-member serialization for types.
 /// </summary>
-internal sealed class TypeConfig
+internal sealed class ByMembersConfig
 {
     /// <summary>
     /// A generic method for getting the managed size of an object.
@@ -35,7 +29,7 @@ internal sealed class TypeConfig
     /// </summary>
     public readonly Type Target;
 
-    public TypeConfig(DozerSerializer serializer, Type type)
+    public ByMembersConfig(DozerSerializer serializer, Type type)
     {
         if (type.IsPrimitive)
         {
@@ -50,7 +44,7 @@ internal sealed class TypeConfig
     }
 
     /// <summary>
-    /// Determines whether the output of <see cref="BlitFormatter{T}"/> and <see cref="MemberFormatter{T}"/>
+    /// Determines whether the output of <see cref="BlitFormatter{T}"/> and <see cref="ByMembersFormatter{T}"/>
     /// would be identical for the given type.
     /// </summary>
     /// <param name="serializer">The associated serializer.</param>
@@ -71,8 +65,7 @@ internal sealed class TypeConfig
         {
             if (member is FieldInfo field)
             {
-                if (serializer.GetFormatter(field.FieldType) is not IBlitFormatter
-                    && !DozerSerializer.BlittablePrimitiveTypes.Contains(target))
+                if (serializer.GetFormatter(field.FieldType) is not IBlitFormatter)
                 {
                     return false;
                 }

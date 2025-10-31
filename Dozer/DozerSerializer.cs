@@ -1,5 +1,4 @@
 ﻿using DouglasDwyer.Dozer.Formatters;
-using DouglasDwyer.Dozer.Resolvers;
 using System;
 using System.Buffers;
 using System.Collections.Immutable;
@@ -10,8 +9,10 @@ using System.Runtime.InteropServices;
 
 namespace DouglasDwyer.Dozer;
 
-// todo: better name, this one conflicts with namespace
-
+/// <summary>
+/// Converts between objects and byte arrays. Holds all caches, formatters,
+/// resolvers, and options necessary for serialization.
+/// </summary>
 public sealed class DozerSerializer
 {
     /// <summary>
@@ -31,7 +32,7 @@ public sealed class DozerSerializer
     /// All primitive types that are blittable.
     /// Any <c>struct</c>s must be compositions of these types.
     /// </summary>
-    internal static readonly ImmutableHashSet<Type> BlittablePrimitiveTypes = BitConverter.IsLittleEndian ? [
+    private static readonly ImmutableHashSet<Type> BlittablePrimitiveTypes = BitConverter.IsLittleEndian ? [
         typeof(byte),
         typeof(ushort),
         typeof(uint),
@@ -64,7 +65,7 @@ public sealed class DozerSerializer
     /// <summary>
     /// Metadata that controls by-member serialization.
     /// </summary>
-    private readonly ConditionalWeakTable<Type, TypeConfig> _typeConfigs;
+    private readonly ConditionalWeakTable<Type, ByMembersConfig> _typeConfigs;
 
     public DozerSerializer() : this(new DozerSerializerOptions()) { }
 
@@ -77,7 +78,7 @@ public sealed class DozerSerializer
 
         _contentFormatters = new ConditionalWeakTable<Type, ContentFormatters>();
         _referenceFormatters = new ConditionalWeakTable<Type, IFormatter>();
-        _typeConfigs = new ConditionalWeakTable<Type, TypeConfig>();
+        _typeConfigs = new ConditionalWeakTable<Type, ByMembersConfig>();
 
         Options = options;
     }
@@ -231,9 +232,9 @@ public sealed class DozerSerializer
     /// </summary>
     /// <param name="type">The type in question.</param>
     /// <returns>
-    /// The configuration to use, or <c>null</c> if <see cref="MemberFormatter{T}"/> is not applicable to this type.
+    /// The configuration to use, or <c>null</c> if <see cref="ByMembersFormatter{T}"/> is not applicable to this type.
     /// </returns>
-    internal TypeConfig? GetTypeConfig(Type type)
+    internal ByMembersConfig? GetTypeConfig(Type type)
     {
         return type.IsPrimitive ? null : _typeConfigs.GetValue(type, CreateTypeConfig);
     }
@@ -324,9 +325,9 @@ public sealed class DozerSerializer
     /// <returns>
     /// The configuration to use.
     /// </returns>
-    private TypeConfig CreateTypeConfig(Type type)
+    private ByMembersConfig CreateTypeConfig(Type type)
     {
-        return new TypeConfig(this, type);
+        return new ByMembersConfig(this, type);
     }
 
     /// <summary>

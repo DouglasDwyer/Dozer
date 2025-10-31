@@ -4,7 +4,7 @@ using System;
 namespace DouglasDwyer.Dozer;
 
 /// <summary>
-/// Customizes how a type is formatted by the <see cref="MemberFormatter{T}"/>.
+/// Customizes how a type is formatted by the <see cref="ByMembersFormatter{T}"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class DozerConfigAttribute : Attribute

@@ -47,6 +47,6 @@ public class DozerSerializerOptions
         new CollectionResolver(),
         new BlitResolver(),
         new SingletonResolver(new PrimitiveFormatter()),
-        new MemberResolver(),
+        new ByMembersResolver(),
     ];
 }
