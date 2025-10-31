@@ -16,13 +16,6 @@ public interface IFormatter { }
 public interface IFormatter<T> : IFormatter
 {
     /// <summary>
-    /// Writes a binary representation of <paramref name="value"/> to a buffer.
-    /// </summary>
-    /// <param name="writer">The binary output data.</param>
-    /// <param name="value">The object to write.</param>
-    void Serialize(BufferWriter writer, in T value);
-
-    /// <summary>
     /// Reads a binary representation of <typeparamref name="T"/> from the buffer.
     /// </summary>
     /// <param name="reader">The binary input data.</param>
@@ -36,4 +29,11 @@ public interface IFormatter<T> : IFormatter
     /// reference is requested, but for that to work, the object must already be set.
     /// </param>
     void Deserialize(BufferReader reader, out T value);
+
+    /// <summary>
+    /// Writes a binary representation of <paramref name="value"/> to a buffer.
+    /// </summary>
+    /// <param name="writer">The binary output data.</param>
+    /// <param name="value">The object to write.</param>
+    void Serialize(BufferWriter writer, in T value);
 }

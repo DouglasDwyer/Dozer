@@ -6,6 +6,9 @@ using System.Reflection;
 
 namespace DouglasDwyer.Dozer;
 
+/// <summary>
+/// Controls how <see cref="DozerSerializer"/> reads and writes objects.
+/// </summary>
 public class DozerSerializerOptions
 {
     /// <summary>
@@ -29,11 +32,12 @@ public class DozerSerializerOptions
 
     public IList<IFormatterResolver> Resolvers { get; } = [
         new GenericResolver(typeof(AssemblyFormatter)),
+        new GenericResolver(typeof(MethodBaseFormatter)),
+        new GenericResolver(typeof(ModuleFormatter)),
         new GenericResolver(typeof(TypeFormatter)),
         new AttributeResolver(),
         new ArrayResolver(),
         new SingletonResolver(new CultureInfoFormatter()),
-        new SingletonResolver(new PrimitiveFormatter()),
         new SingletonResolver(new ReferenceEqualityComparerFormatter()),
         new GenericResolver(typeof(KeyValuePairFormatter<,>)),
         new GenericResolver(typeof(ListFormatter<>)),
@@ -41,6 +45,8 @@ public class DozerSerializerOptions
         new GenericResolver(typeof(StackFormatter<>)),
         new ComparerCollectionResolver(),
         new CollectionResolver(),
-        new GenericResolver(typeof(MemberFormatter<>)),
+        new BlitResolver(),
+        new SingletonResolver(new PrimitiveFormatter()),
+        new MemberResolver(),
     ];
 }

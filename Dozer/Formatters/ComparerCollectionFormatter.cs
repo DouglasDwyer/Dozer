@@ -14,6 +14,9 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="A">The collection type itself.</typeparam>
 public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A : ICollection<T?>
 {
+    /// <summary>
+    /// Gets the formatter to use for serializing comparers.
+    /// </summary>
     private readonly IFormatter<object?> _comparerFormatter;
 
     /// <summary>
@@ -21,21 +24,24 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
     /// </summary>
     private readonly IFormatter<T?> _elementFormatter;
 
+    /// <summary>
+    /// Creates a new, empty collection.
+    /// </summary>
     private readonly Func<int, object?, A> _newCollection;
+    
+    /// <summary>
+    /// Gets the comparer (if any) associated with a given collection.
+    /// </summary>
     private readonly Func<A, object?> _getComparer;
 
-    /*
-     * Dictionary -> equalitycomparer
-     HashSet -> equalitycomparer
-    OrderedDictionary -> equalitycomparer
-    PriorityQueue -> comparer
-    SortedDictionary -> comparer
-    SortedList -> comparer
-    SortedSet -> comparer
-
-
-     */
-
+    /// <summary>
+    /// Creates a new formatter.
+    /// </summary>
+    /// <param name="serializer"></param>
+    /// <exception cref="ArgumentException">
+    /// If <typeparamref name="A"/> was not an <see cref="ICollection{T}"/> with a comparer,
+    /// or if <typeparamref name="K"/> was not the correct key type.
+    /// </exception>
     public ComparerCollectionFormatter(DozerSerializer serializer)
     {
         var comparerProperty = typeof(A).GetProperty("Comparer");

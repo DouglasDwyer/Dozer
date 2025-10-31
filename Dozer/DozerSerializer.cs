@@ -1,4 +1,5 @@
 ﻿using DouglasDwyer.Dozer.Formatters;
+using DouglasDwyer.Dozer.Resolvers;
 using System;
 using System.Buffers;
 using System.Collections.Immutable;
@@ -21,9 +22,28 @@ public sealed class DozerSerializer
         typeof(Assembly),
         typeof(ConstructorInfo),
         typeof(FieldInfo),
-        typeof(MethodInfo),
+        typeof(MethodBase),
+        typeof(Module),
         typeof(Type),
     ];
+
+    /// <summary>
+    /// All primitive types that are blittable.
+    /// Any <c>struct</c>s must be compositions of these types.
+    /// </summary>
+    internal static readonly ImmutableHashSet<Type> BlittablePrimitiveTypes = BitConverter.IsLittleEndian ? [
+        typeof(byte),
+        typeof(ushort),
+        typeof(uint),
+        typeof(ulong),
+        typeof(sbyte),
+        typeof(short),
+        typeof(int),
+        typeof(long),
+        typeof(float),
+        typeof(double),
+        typeof(char),
+    ] : [typeof(byte)];
 
     // todo: prevent mutation :(
     /// <summary>
@@ -41,6 +61,11 @@ public sealed class DozerSerializer
     /// </summary>
     private readonly ConditionalWeakTable<Type, IFormatter> _referenceFormatters;
 
+    /// <summary>
+    /// Metadata that controls by-member serialization.
+    /// </summary>
+    private readonly ConditionalWeakTable<Type, TypeConfig?> _typeConfigs;
+
     public DozerSerializer() : this(new DozerSerializerOptions()) { }
 
     public DozerSerializer(DozerSerializerOptions options)
@@ -52,6 +77,8 @@ public sealed class DozerSerializer
 
         _contentFormatters = new ConditionalWeakTable<Type, ContentFormatters>();
         _referenceFormatters = new ConditionalWeakTable<Type, IFormatter>();
+        _typeConfigs = new ConditionalWeakTable<Type, TypeConfig?>();
+
         Options = options;
     }
 
@@ -198,6 +225,19 @@ public sealed class DozerSerializer
         return (IFormatter<T?>)GetFormatter(typeof(T));
     }
 
+    // todo
+    internal TypeConfig? GetTypeConfig(Type type)
+    {
+        if (type.IsPrimitive)
+        {
+            return null;
+        }
+        else
+        {
+            return _typeConfigs.GetValue(type, CreateTypeConfig);
+        }
+    }
+
     /// <summary>
     /// Gets a type-erased dispatcher for serializing/deserializing
     /// objects whose true type is <paramref name="type"/>.
@@ -212,6 +252,12 @@ public sealed class DozerSerializer
     internal IFormatter<object> GetPolymorphicDispatcher(Type type)
     {
         return _contentFormatters.GetValue(type, CreateContentFormatters).PolymorphicDispatcher;
+    }
+
+    // todo
+    internal bool IsBlittable(Type type)
+    {
+        return BlittablePrimitiveTypes.Contains(type) || (GetTypeConfig(type)?.Blittable ?? false);
     }
 
     /// <summary>
@@ -263,6 +309,12 @@ public sealed class DozerSerializer
     private IFormatter CreateReferenceFormatter(Type type)
     {
         return (IFormatter)Activator.CreateInstance(typeof(ReferenceFormatter<>).MakeGenericType(type), [this])!;
+    }
+
+    // todo
+    private TypeConfig? CreateTypeConfig(Type type)
+    {
+        return new TypeConfig(this, type);
     }
 
     /// <summary>

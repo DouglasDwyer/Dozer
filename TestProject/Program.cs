@@ -7,12 +7,35 @@ namespace TestProject
         public bool Car;
     }
 
+    [DozerConfig]
     public sealed class Cyclic
     {
-        public string Foo;
-        public Cyclic?[] Next;
+        public string Foo { get; set; }
+        public Cyclic?[] Next { get; set; }
+
+        [DozerExclude]
+        public int DoNotSerialize;
+
+        [DozerInclude]
+        private readonly int PleaseSerialize = 23;
 
         public Cyclic() { }
+
+        public Cyclic(int k) { PleaseSerialize = k; }
+    }
+
+    public struct OneTwoOatmeal
+    {
+        public byte Ex;
+        public byte Hi;
+        public char Why;
+    }
+
+    public enum Kirby
+    {
+        One,
+        Two,
+        Oatmeal
     }
 
     internal class Program
@@ -24,14 +47,11 @@ namespace TestProject
 
             var serializer = new DozerSerializer(options);
 
-            var ppp = new Dictionary<string, string>() { { "a", "b" }, { "c", "d" } };
-            /*var ppp = new HashSet<object>();
-            ppp.Add(1);
-            ppp.Add(-2);
-            ppp.Add(64);*/
+            //var ppp = new Cyclic { Foo = "pepee", Next = new Cyclic?[2] };
+            var ppp = new[] { new OneTwoOatmeal { Ex = 2, Hi = 42, Why = 'L' } };
 
-            var ser = serializer.Serialize<object>(ppp);
-            var deser = serializer.Deserialize<object>(ser);
+            var ser = serializer.Serialize<OneTwoOatmeal[]>(ppp);
+            var deser = serializer.Deserialize<OneTwoOatmeal[]>(ser);
 
             Console.WriteLine("Hello, World!");
         }

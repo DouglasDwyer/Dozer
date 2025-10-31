@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
@@ -12,37 +13,46 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 public class MemberFormatter<T> : IFormatter<T>
 {
+    /// <summary>
+    /// The function type that is created for deserialization.
+    /// </summary>
+    /// <param name="reader">The binary input data.</param>
+    /// <param name="value">The object that was deserialized.</param>
     private delegate void DeserializeDelegate(BufferReader reader, out T value);
+
+    /// <summary>
+    /// The function type that is created for serialization.
+    /// </summary>
+    /// <param name="writer">The binary output data.</param>
+    /// <param name="value">The object to write.</param>
     private delegate void SerializeDelegate(BufferWriter writer, in T value);
 
+    /// <summary>
+    /// The compiled deserialization code for this type.
+    /// </summary>
     private readonly DeserializeDelegate _deserialize;
+
+    /// <summary>
+    /// The compiled serialization code for this type.
+    /// </summary>
     private readonly SerializeDelegate _serialize;
 
+    /// <summary>
+    /// Creates a new formatter.
+    /// </summary>
+    /// <param name="serializer">The associated serializer.</param>
+    /// <exception cref="ArgumentException">If <typeparamref name="T"/> did not have a configuration from <paramref name="serializer"/>.</exception>
     public MemberFormatter(DozerSerializer serializer)
     {
-        try
+        var config = serializer.GetTypeConfig(typeof(T));
+
+        if (config is null)
         {
-            if (typeof(T).IsClass && typeof(T).GetConstructor(BindingFlags.Public | BindingFlags.Instance, []) is null)
-            {
-                throw new ArgumentException("Member-formatted types must have public parameterless constructor", nameof(T));
-            }
-
-            if (!typeof(T).IsPublic)
-            {
-                throw new ArgumentException("The constructor should ACTUALLY be public lol");
-            }
-
-            var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy | BindingFlags.NonPublic);
-            var entries = GetEntries(serializer, typeof(T), fields);
-
-            _deserialize = CompileDeserializer(typeof(T), entries);
-            _serialize = CompileSerializer(typeof(T), entries);
+            throw new ArgumentException("Type did not have by-member config", nameof(T));
         }
-        catch
-        {
-            Console.WriteLine("slag it");
-            throw;
-        }
+
+        _deserialize = CompileDeserializer(config);
+        _serialize = CompileSerializer(config);
     }
 
     /// <inheritdoc/>
@@ -57,113 +67,33 @@ public class MemberFormatter<T> : IFormatter<T>
         _serialize(writer, value);
     }
 
-    private static DeserializeDelegate CompileDeserializer(Type type, ReadOnlySpan<FieldEntry> entries)
+    /// <summary>
+    /// Compiles a deserializer for the provided type.
+    /// </summary>
+    /// <param name="config">The configuration of the type to serialize.</param>
+    /// <returns>A delegate that can be called to deserialize the type.</returns>
+    private static DeserializeDelegate CompileDeserializer(TypeConfig config)
     {
         var readerParam = Expression.Parameter(typeof(BufferReader), "reader");
-        var valueParam = Expression.Parameter(type.MakeByRefType(), "value");
-
-        var bodyStatements = new Expression[1 + entries.Length];
-        bodyStatements[0] = Expression.Assign(valueParam, Expression.New(type));
-
-        for (var i = 0; i < entries.Length; i++)
-        {
-            var entry = entries[i];
-            bodyStatements[i + 1] = Expression.Call(
-                Expression.Constant(entry.Formatter),
-                GetDeserializeImplementation(entry.Formatter, entry.Member.FieldType),
-                readerParam,
-                Expression.Field(valueParam, entry.Member));
-        }
-
-        var body = Expression.Block(bodyStatements);
+        var valueParam = Expression.Parameter(config.Target.MakeByRefType(), "value");
+        var body = Expression.Block(config.IncludedMembers.Select(x => CreateDeserializeExpression(x, readerParam, valueParam))
+            .Prepend(Expression.Assign(valueParam, Expression.New(config.Target)))); //todo
         var lambda = Expression.Lambda<DeserializeDelegate>(body, readerParam, valueParam);
-
         return lambda.CompileFast(false, CompilerFlags.DisableInterpreter | CompilerFlags.ThrowOnNotSupportedExpression);
     }
 
-    private static SerializeDelegate CompileSerializer(Type type, ReadOnlySpan<FieldEntry> entries)
+    /// <summary>
+    /// Compiles a serializer for the provided type.
+    /// </summary>
+    /// <param name="config">The configuration of the type to serialize.</param>
+    /// <returns>A delegate that can be called to serialize the type.</returns>
+    private static SerializeDelegate CompileSerializer(TypeConfig config)
     {
         var writerParam = Expression.Parameter(typeof(BufferWriter), "writer");
-        var valueParam = Expression.Parameter(type.MakeByRefType(), "value");
-
-        var bodyStatements = new Expression[entries.Length];
-        
-        for (var i = 0; i < entries.Length; i++)
-        {
-            var entry = entries[i];
-            bodyStatements[i] = Expression.Call(
-                Expression.Constant(entry.Formatter),
-                GetSerializeImplementation(entry.Formatter, entry.Member.FieldType),
-                writerParam,
-                Expression.Field(valueParam, entry.Member));
-        }
-
-        var body = Expression.Block(bodyStatements);
+        var valueParam = Expression.Parameter(config.Target.MakeByRefType(), "value");
+        var body = Expression.Block(config.IncludedMembers.Select(x => CreateSerializeExpression(x, writerParam, valueParam)));
         var lambda = Expression.Lambda<SerializeDelegate>(body, writerParam, valueParam);
-
         return lambda.CompileFast(false, CompilerFlags.DisableInterpreter | CompilerFlags.ThrowOnNotSupportedExpression);
-    }
-
-    private static FieldEntry[] GetEntries(DozerSerializer serializer, Type type, IEnumerable<FieldInfo> fields)
-    {
-        var inheritanceHierarchy = GetInheritanceHierarchy(type);
-        var fieldsSorted = fields.Distinct().OrderBy(x => (inheritanceHierarchy.IndexOf(x.DeclaringType!), x.Name)).ToArray();
-        var entries = new FieldEntry[fieldsSorted.Length];
-
-        for (var i = 0; i < fieldsSorted.Length; i++)
-        {
-            var field = fieldsSorted[i];
-            entries[i] = new FieldEntry
-            {
-                Formatter = serializer.GetFormatter(field.FieldType),
-                Member = field
-            };
-        }
-
-        return entries;
-    }
-
-    private static List<Type> GetInheritanceHierarchy(Type type)
-    {
-        var result = new List<Type>();
-        var currentType = type;
-        while (currentType != null)
-        {
-            result.Add(currentType);
-            currentType = currentType.BaseType;
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Gets the concrete deserialize method for a formatter.
-    /// </summary>
-    /// <param name="formatter">The formatter object.</param>
-    /// <param name="targetType">The type to be deserialized.</param>
-    /// <returns>
-    /// The implementation of <see cref="IFormatter{T}.Deserialize(BufferReader, out T)"/> that will be invoked.
-    /// </returns>
-    private static MethodInfo GetDeserializeImplementation(object formatter, Type targetType)
-    {
-        return GetImplementationMethod(
-            formatter.GetType(),
-            typeof(IFormatter<>).MakeGenericType(targetType).GetMethod(nameof(IFormatter<bool>.Deserialize))!);
-    }
-
-    /// <summary>
-    /// Gets the concrete serialize method for a formatter.
-    /// </summary>
-    /// <param name="formatter">The formatter object.</param>
-    /// <param name="targetType">The type to be serialized.</param>
-    /// <returns>
-    /// The implementation of <see cref="IFormatter{T}.Serialize(BufferWriter, in T)"/> that will be invoked.
-    /// </returns>
-    private static MethodInfo GetSerializeImplementation(object formatter, Type targetType)
-    {
-        return GetImplementationMethod(
-            formatter.GetType(),
-            typeof(IFormatter<>).MakeGenericType(targetType).GetMethod(nameof(IFormatter<bool>.Serialize))!);
     }
 
     /// <summary>
@@ -196,18 +126,112 @@ public class MemberFormatter<T> : IFormatter<T>
     }
 
     /// <summary>
-    /// Describes a specific field to be serialized.
+    /// Generates the deserialize expression for a member.
     /// </summary>
-    private struct FieldEntry
+    /// <param name="entry">
+    /// The member to deserialize.
+    /// </param>
+    /// <param name="reader">
+    /// An expression representing the input <see cref="BufferReader"/>.
+    /// </param>
+    /// <param name="value">
+    /// An expression representing the <c>out</c> value to deserialize.
+    /// </param>
+    /// <returns>
+    /// The expression that was created.
+    /// </returns>
+    private static Expression CreateDeserializeExpression(TypeConfig.Member entry, Expression reader, Expression value)
     {
-        /// <summary>
-        /// The formatter object to use.
-        /// </summary>
-        public required IFormatter Formatter;
+        switch (entry.Info)
+        {
+            case FieldInfo field:
+                {
+                    return Expression.Call(
+                        Expression.Constant(entry.Formatter),
+                        GetDeserializeImplementation(entry.Formatter, entry.Type),
+                        reader,
+                        Expression.Field(value, field));
+                }
+            case PropertyInfo property:
+                var temp = Expression.Variable(entry.Type);
+                var call = Expression.Call(
+                    Expression.Constant(entry.Formatter),
+                    GetDeserializeImplementation(entry.Formatter, entry.Type),
+                    reader,
+                    temp);
+                var assign = Expression.Assign(Expression.Property(value, property), temp);
+                return Expression.Block([temp], call, assign);
+            default:
+                throw new InvalidOperationException("Unrecognized member type");
+        }
+    }
 
-        /// <summary>
-        /// The field to serialize.
-        /// </summary>
-        public required FieldInfo Member;
+    /// <summary>
+    /// Generates the serialize expression for this member.
+    /// </summary>
+    /// <param name="entry">
+    /// The member to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// An expression representing the output <see cref="BufferWriter"/>.
+    /// </param>
+    /// <param name="value">
+    /// An expression representing the <c>out</c> value to deserialize.
+    /// </param>
+    /// <returns>
+    /// The expression that was created.
+    /// </returns>
+    private static Expression CreateSerializeExpression(TypeConfig.Member entry, Expression writer, Expression value)
+    {
+        switch (entry.Info)
+        {
+            case FieldInfo field:
+                return Expression.Call(
+                    Expression.Constant(entry.Formatter),
+                    GetSerializeImplementation(entry.Formatter, entry.Type),
+                    writer,
+                    Expression.Field(value, field));
+            case PropertyInfo property:
+                var temp = Expression.Variable(entry.Type);
+                var assign = Expression.Assign(temp, Expression.Property(value, property));
+                var call = Expression.Call(
+                    Expression.Constant(entry.Formatter),
+                    GetSerializeImplementation(entry.Formatter, entry.Type),
+                    writer,
+                    temp);
+                return Expression.Block([temp], assign, call);
+            default:
+                throw new InvalidOperationException("Unrecognized member type");
+        }
+    }
+
+    /// <summary>
+    /// Gets the concrete deserialize method for a formatter.
+    /// </summary>
+    /// <param name="formatter">The formatter object.</param>
+    /// <param name="targetType">The type to be deserialized.</param>
+    /// <returns>
+    /// The implementation of <see cref="IFormatter{T}.Deserialize(BufferReader, out T)"/> that will be invoked.
+    /// </returns>
+    private static MethodInfo GetDeserializeImplementation(object formatter, Type targetType)
+    {
+        return GetImplementationMethod(
+            formatter.GetType(),
+            typeof(IFormatter<>).MakeGenericType(targetType).GetMethod(nameof(IFormatter<bool>.Deserialize))!);
+    }
+
+    /// <summary>
+    /// Gets the concrete serialize method for a formatter.
+    /// </summary>
+    /// <param name="formatter">The formatter object.</param>
+    /// <param name="targetType">The type to be serialized.</param>
+    /// <returns>
+    /// The implementation of <see cref="IFormatter{T}.Serialize(BufferWriter, in T)"/> that will be invoked.
+    /// </returns>
+    private static MethodInfo GetSerializeImplementation(object formatter, Type targetType)
+    {
+        return GetImplementationMethod(
+            formatter.GetType(),
+            typeof(IFormatter<>).MakeGenericType(targetType).GetMethod(nameof(IFormatter<bool>.Serialize))!);
     }
 }

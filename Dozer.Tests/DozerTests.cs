@@ -1,4 +1,6 @@
-﻿using DouglasDwyer.Dozer.Formatters;
+﻿using System.Reflection;
+
+using DouglasDwyer.Dozer.Formatters;
 
 namespace DouglasDwyer.Dozer.Tests
 {
@@ -88,6 +90,21 @@ namespace DouglasDwyer.Dozer.Tests
 
             Assert.IsNotNull(deserialized);
             Assert.IsTrue(deserialized.Deserialized);
+        }
+
+        /// <summary>
+        /// Tests that a constructor's <see cref="MethodBase"/> can be serialized and deserialized.
+        /// </summary>
+        [TestMethod]
+        public void TestSerializeConstructor()
+        {
+            var serializer = new DozerSerializer();
+
+            var target = typeof(TestCustom).GetConstructors()[0];
+            var bytes = serializer.Serialize(target);
+            var deserialized = serializer.Deserialize<ConstructorInfo>(bytes);
+
+            Assert.AreEqual(target, deserialized);
         }
 
         [DefaultFormatter(typeof(TestCustomFormatter))]

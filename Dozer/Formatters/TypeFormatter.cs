@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
@@ -33,7 +32,7 @@ public sealed class TypeFormatter : IFormatter<Type>
     /// Formats method references. Used when serializing the generic
     /// type parameters of methods.
     /// </summary>
-    private readonly IFormatter<MethodInfo?> _methodFormatter;
+    private readonly IFormatter<MethodBase?> _methodFormatter;
 
     /// <summary>
     /// A reference serializer that will recursively fall back to this
@@ -54,7 +53,7 @@ public sealed class TypeFormatter : IFormatter<Type>
         _knownTypes = new NameMap<Type>(
             serializer.Options.KnownAssemblies.Where(x => !x.IsDynamic).SelectMany(x => x.GetTypes()),
             PersistentTypeName);
-        _methodFormatter = null!;// serializer.GetFormatter<MethodInfo>();
+        _methodFormatter = serializer.GetFormatter<MethodBase>();
         _typeReferenceFormatter = serializer.GetFormatter<Type>();
     }
 
@@ -75,21 +74,19 @@ public sealed class TypeFormatter : IFormatter<Type>
             {
                 _typeReferenceFormatter.Deserialize(reader, out var element);
                 ThrowInvalidDataExceptionIfNull(element, "Array type was not encoded properly: expected element type, but got null");
-                value = element.MakeArrayType(metadata.Arity);
+                value = element.MakeArrayType(metadata.Dimensions);
                 break;
             }
             case TypeKind.TypeParameter:
             {
-                var position = reader.ReadUInt8();
                 _typeReferenceFormatter.Deserialize(reader, out var parent);
-                value = parent!.GetGenericArguments()[position];
+                value = parent!.GetGenericArguments()[metadata.GenericIndex];
                 break;
             }
             case TypeKind.MethodParameter:
             {
-                var position = reader.ReadUInt8();
                 _methodFormatter.Deserialize(reader, out var parent);
-                value = parent!.GetGenericArguments()[position];
+                value = parent!.GetGenericArguments()[metadata.GenericIndex];
                 break;
             }
             case TypeKind.ConstructedGeneric:
@@ -162,14 +159,12 @@ public sealed class TypeFormatter : IFormatter<Type>
         }
         else if (value.IsGenericTypeParameter)
         {
-            writer.WriteUInt8((byte)TypeMetadata.TypeParameter());
-            writer.WriteUInt8((byte)value.GenericParameterPosition);
+            writer.WriteUInt8((byte)TypeMetadata.TypeParameter(value.GenericParameterPosition));
             _typeReferenceFormatter.Serialize(writer, value.DeclaringType);
         }
         else if (value.IsGenericMethodParameter)
         {
-            writer.WriteUInt8((byte)TypeMetadata.MethodParameter());
-            writer.WriteUInt8((byte)value.GenericParameterPosition);
+            writer.WriteUInt8((byte)TypeMetadata.MethodParameter(value.GenericParameterPosition));
             _methodFormatter.Serialize(writer, (MethodInfo)value.DeclaringMethod!);
         }
         else if (value.IsConstructedGenericType)
@@ -293,23 +288,38 @@ public sealed class TypeFormatter : IFormatter<Type>
         public TypeKind Kind => (TypeKind)(_inner & 0b111);
 
         /// <summary>
-        /// Gets the arity (if any) associated with the type.
+        /// If <see cref="Kind"/> is <see cref="TypeKind.Array"/>, gets the total number of dimensions.
         /// </summary>
-        public int Arity
+        public int Dimensions
         {
             get
             {
-                if (Kind == TypeKind.Definition)
-                {
-                    return _inner >> 3;
-                }
-                else if (Kind == TypeKind.Array)
+                if (Kind == TypeKind.Array)
                 {
                     return (_inner >> 3) + 1;
                 }
                 else
                 {
-                    throw new InvalidOperationException("Type metadata not associated with an arity");
+                    throw new InvalidOperationException("Type metadata was not of TypeKind.Array");
+                }
+            }
+        }
+
+        /// <summary>
+        /// If <see cref="Kind"/> is <see cref="TypeKind.MethodParameter"/> or <see cref="TypeKind.TypeParameter"/>,
+        /// gets the generic parameter index.
+        /// </summary>
+        public int GenericIndex
+        {
+            get
+            {
+                if (Kind == TypeKind.MethodParameter || Kind == TypeKind.TypeParameter)
+                {
+                    return _inner >> 3;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Type metadata was not of TypeKind.MethodParameter or TypeKind.TypeParameter");
                 }
             }
         }
@@ -387,10 +397,11 @@ public sealed class TypeFormatter : IFormatter<Type>
         /// <summary>
         /// A generic method parameter.
         /// </summary>
+        /// <param name="index">The index of the parameter.</param>
         /// <returns>The associated metadata.</returns>
-        public static TypeMetadata MethodParameter()
+        public static TypeMetadata MethodParameter(int index)
         {
-            return new TypeMetadata(TypeKind.MethodParameter, 0);
+            return new TypeMetadata(TypeKind.MethodParameter, index);
         }
 
         /// <summary>
@@ -405,10 +416,11 @@ public sealed class TypeFormatter : IFormatter<Type>
         /// <summary>
         /// A generic type parameter.
         /// </summary>
+        /// <param name="index">The index of the parameter.</param>
         /// <returns>The associated metadata.</returns>
-        public static TypeMetadata TypeParameter()
+        public static TypeMetadata TypeParameter(int index)
         {
-            return new TypeMetadata(TypeKind.TypeParameter, 0);
+            return new TypeMetadata(TypeKind.TypeParameter, index);
         }
 
         /// <summary>

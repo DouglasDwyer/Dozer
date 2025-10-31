@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace DouglasDwyer.Dozer.Resolvers;
 
@@ -13,11 +14,12 @@ public sealed class CollectionResolver : IFormatterResolver
     /// <inheritdoc/>
     public IFormatter? GetFormatter(DozerSerializer serializer, Type type)
     {
+        var parameterlessConstructor = type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, []);
         var collectionInterface = type.GetInterfaces()
             .Where(x => x.IsConstructedGenericType && x.GetGenericTypeDefinition() == typeof(ICollection<>))
             .SingleOrDefault();
 
-        if (collectionInterface is not null)
+        if (parameterlessConstructor is not null && collectionInterface is not null)
         {
             var elementType = collectionInterface.GetGenericArguments()[0];
             var formatterType = typeof(CollectionFormatter<,>).MakeGenericType(elementType, type);

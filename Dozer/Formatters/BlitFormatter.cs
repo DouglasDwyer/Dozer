@@ -1,26 +1,38 @@
-﻿using System;
+﻿using DouglasDwyer.Dozer.Resolvers;
+using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
-internal class BlitFormatter<T> : IFormatter<T>, ISpanFormatter<T> where T : unmanaged
+/// <summary>
+/// Copies the bytes of a type directly to/from memory.
+/// </summary>
+/// <typeparam name="T">
+/// The type to be formatted. This must be a "blittable" type (it must be unmanaged,
+/// and either a primitive or a struct with blittable fields).
+/// </typeparam>
+public sealed class BlitFormatter<T> : IBlitFormatter, IFormatter<T>, ISpanFormatter<T> where T : unmanaged
 {
-    public BlitFormatter()
+    /// <summary>
+    /// Creates a new formatter.
+    /// </summary>
+    /// <param name="serializer">The associated serializer.</param>
+    /// <exception cref="ArgumentException">
+    /// If <typeparamref name="T"/> was not a blittable type.
+    /// </exception>
+    public BlitFormatter(DozerSerializer serializer)
     {
-        // todo: assert that T is ACTUALLY blittable (i.e. unmanaged, no booleans, little endian, explicit layout, no gaps)
-        // tbh would also want to check that the fields are publicly constructible:
-        // i.e. this should be an optimization for DynamicFormatter and not enable serialization of additional types.
-
-        if (!BitConverter.IsLittleEndian)
+        if (!serializer.IsBlittable(typeof(T)))
         {
-            
+            throw new ArgumentException("Type was not blittable", nameof(T));
         }
     }
 
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out T value)
     {
-        value = MemoryMarshal.Read<T>(reader.Read(Marshal.SizeOf<T>()));
+        value = MemoryMarshal.Read<T>(reader.Read(Unsafe.SizeOf<T>()));
     }
 
     /// <inheritdoc/>
@@ -41,53 +53,4 @@ internal class BlitFormatter<T> : IFormatter<T>, ISpanFormatter<T> where T : unm
     {
         writer.Write(MemoryMarshal.AsBytes(elements));
     }
-
-    /*
-    private static bool IsBlittable(Type type)
-    {
-        if (!type.IsValueType)
-        {
-            return false;
-        }
-
-        if (type.IsPrimitive)
-        {
-            if (type == typeof(bool))
-            {
-                return false;
-            }
-            if (1 < Marshal.SizeOf(type) && !BitConverter.IsLittleEndian)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        if (!type.IsLayoutSequential && !type.IsExplicitLayout)
-        {
-            return false;
-        }
-
-        var bytesTaken = new BitArray(Marshal.SizeOf(type));
-
-        // Note: this should only enumerate the fields that are accessible to us.
-        var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        foreach (var field in fields)
-        {
-            if (!IsBlittable(field.FieldType))
-            {
-                return false;
-            }
-
-            var start = (int)Marshal.OffsetOf(type, field.Name);
-            var end = start + Marshal.SizeOf(field.FieldType);
-            for (var i = start; i < end; i++)
-            {
-                bytesTaken.Set(i, true);
-            }
-        }
-
-        return bytesTaken.HasAllSet();
-    }*/
 }
