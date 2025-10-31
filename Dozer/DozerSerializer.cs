@@ -64,7 +64,7 @@ public sealed class DozerSerializer
     /// <summary>
     /// Metadata that controls by-member serialization.
     /// </summary>
-    private readonly ConditionalWeakTable<Type, TypeConfig?> _typeConfigs;
+    private readonly ConditionalWeakTable<Type, TypeConfig> _typeConfigs;
 
     public DozerSerializer() : this(new DozerSerializerOptions()) { }
 
@@ -77,7 +77,7 @@ public sealed class DozerSerializer
 
         _contentFormatters = new ConditionalWeakTable<Type, ContentFormatters>();
         _referenceFormatters = new ConditionalWeakTable<Type, IFormatter>();
-        _typeConfigs = new ConditionalWeakTable<Type, TypeConfig?>();
+        _typeConfigs = new ConditionalWeakTable<Type, TypeConfig>();
 
         Options = options;
     }
@@ -225,17 +225,17 @@ public sealed class DozerSerializer
         return (IFormatter<T?>)GetFormatter(typeof(T));
     }
 
-    // todo
+    /// <summary>
+    /// Gets the by-member serialization settings for this type.
+    /// This includes which constructor to use and what members to include.
+    /// </summary>
+    /// <param name="type">The type in question.</param>
+    /// <returns>
+    /// The configuration to use, or <c>null</c> if <see cref="MemberFormatter{T}"/> is not applicable to this type.
+    /// </returns>
     internal TypeConfig? GetTypeConfig(Type type)
     {
-        if (type.IsPrimitive)
-        {
-            return null;
-        }
-        else
-        {
-            return _typeConfigs.GetValue(type, CreateTypeConfig);
-        }
+        return type.IsPrimitive ? null : _typeConfigs.GetValue(type, CreateTypeConfig);
     }
 
     /// <summary>
@@ -254,7 +254,13 @@ public sealed class DozerSerializer
         return _contentFormatters.GetValue(type, CreateContentFormatters).PolymorphicDispatcher;
     }
 
-    // todo
+    /// <summary>
+    /// Determines whether the given type is blittable, without instantiating its formatter.
+    /// This is based upon whether the type is a primitive, or whether its by-member configuration
+    /// allows the entire <c>struct</c> to be serialized verbatim.
+    /// </summary>
+    /// <param name="type">The type in question.</param>
+    /// <returns><c>true</c> if a <see cref="BlitFormatter{T}"/> can be instantiated for this type.</returns>
     internal bool IsBlittable(Type type)
     {
         return BlittablePrimitiveTypes.Contains(type) || (GetTypeConfig(type)?.Blittable ?? false);
@@ -311,8 +317,14 @@ public sealed class DozerSerializer
         return (IFormatter)Activator.CreateInstance(typeof(ReferenceFormatter<>).MakeGenericType(type), [this])!;
     }
 
-    // todo
-    private TypeConfig? CreateTypeConfig(Type type)
+    /// <summary>
+    /// Generates the by-member configuration for a type.
+    /// </summary>
+    /// <param name="type">The type to serialize.</param>
+    /// <returns>
+    /// The configuration to use.
+    /// </returns>
+    private TypeConfig CreateTypeConfig(Type type)
     {
         return new TypeConfig(this, type);
     }

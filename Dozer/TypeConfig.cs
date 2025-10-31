@@ -37,6 +37,11 @@ internal sealed class TypeConfig
 
     public TypeConfig(DozerSerializer serializer, Type type)
     {
+        if (type.IsPrimitive)
+        {
+            throw new ArgumentException("Primitive types cannot be serialized by member", nameof(type));
+        }
+
         var members = type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
             .Where(x => x is FieldInfo || x is PropertyInfo);
         IncludedMembers = members.Select(x => new Member(serializer, x)).ToArray();
@@ -44,7 +49,16 @@ internal sealed class TypeConfig
         Blittable = CanBlit(serializer, type, members);
     }
 
-    // todo
+    /// <summary>
+    /// Determines whether the output of <see cref="BlitFormatter{T}"/> and <see cref="MemberFormatter{T}"/>
+    /// would be identical for the given type.
+    /// </summary>
+    /// <param name="serializer">The associated serializer.</param>
+    /// <param name="target">The type in question.</param>
+    /// <param name="members">The members of the type included in serialization.</param>
+    /// <returns>
+    /// <c>true</c> if the type can be copied to/from memory verbatim.
+    /// </returns>
     private static bool CanBlit(DozerSerializer serializer, Type target, IEnumerable<MemberInfo> members)
     {
         if (!target.IsValueType || !target.IsLayoutSequential)
@@ -154,7 +168,7 @@ internal sealed class TypeConfig
     }
 
     /*
-     
+     todo
      
     /// <summary>
     /// Creates <see cref="TypeConfig.Member"/> instances for all members to be serialized.
