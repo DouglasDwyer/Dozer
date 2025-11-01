@@ -17,6 +17,11 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
     private readonly IFormatter<T?> _elementFormatter;
 
     /// <summary>
+    /// The maximum allowed array size.
+    /// </summary>
+    private readonly int _maxCollectionSize;
+
+    /// <summary>
     /// A formatter that can serialize an entire fixed-size span with one call.
     /// This is primarily used as an optimization with <see cref="BlitFormatter{T}"/>.
     /// </summary>
@@ -51,7 +56,9 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
     {
         if (typeof(A).IsSZArray)
         {
-            value = (A)(object)new T[reader.ReadVarUInt32()];
+            var length = (int)reader.ReadVarUInt32();
+            reader.Context.ConsumeBytes(Unsafe.SizeOf<T>() * length);
+            value = (A)(object)new T[length];
         }
         else
         {
@@ -68,6 +75,7 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
                 lowerBounds[i] = (int)reader.ReadVarUInt32();
             }
 
+            reader.Context.ConsumeBytes(Unsafe.SizeOf<T>() * CheckedProduct(lengths));
             value = (A)(object)Array.CreateInstanceFromArrayType(typeof(A), lengths, lowerBounds);
         }
 
@@ -149,5 +157,26 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
         }
 
         return MemoryMarshal.CreateSpan(ref Unsafe.As<byte, T?>(ref MemoryMarshal.GetArrayDataReference(value)), value.Length);
+    }
+
+    /// <summary>
+    /// Computes the product of all <paramref name="values"/>, throwing
+    /// an exception if the result overflows.
+    /// </summary>
+    /// <param name="values">The values to multiply.</param>
+    /// <returns>The total product.</returns>
+    private int CheckedProduct(ReadOnlySpan<int> values)
+    {
+        checked
+        {
+            var result = 1;
+            
+            foreach (var value in values)
+            {
+                result *= value;
+            }
+
+            return result;
+        }
     }
 }

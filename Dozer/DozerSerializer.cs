@@ -69,6 +69,7 @@ public sealed class DozerSerializer
         new CollectionResolver(),
         new BlitResolver(),
         new SingletonResolver(new PrimitiveFormatter()),
+        // todo: allow serializing names or not (if names, then no blitting..!)
         new ByMembersResolver(),
     ];
 
@@ -213,6 +214,8 @@ public sealed class DozerSerializer
     public T? Deserialize<T>(ref ReadOnlySpan<byte> data)
     {
         var context = DeserializationContext.Pool.Get();
+        context.MaxAllocatedBytes = _options.MaxAllocatedBytes;
+
         try
         {
             var position = 0;

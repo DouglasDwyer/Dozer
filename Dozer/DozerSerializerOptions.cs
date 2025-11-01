@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -27,6 +28,13 @@ public class DozerSerializerOptions : ICloneable
     public IList<Assembly> KnownAssemblies { get; }
 
     /// <summary>
+    /// The maximum amount of memory (in bytes) that a single deserialization attempt
+    /// may allocate. Exceeding this limit results in a <see cref="InvalidDataException"/>.
+    /// This can be used to mitigate denial-of-service (DoS) attacks.
+    /// </summary>
+    public int MaxAllocatedBytes { get; set; }
+
+    /// <summary>
     /// User-defined resolvers that customize the serialization process for certain types.
     /// </summary>
     public IList<IFormatterResolver> Resolvers { get; }
@@ -37,6 +45,7 @@ public class DozerSerializerOptions : ICloneable
     /// <list type="bullet">
     /// <item>Using a <see cref="ContextAssemblyLoader"/></item>
     /// <item><c>System</c>, <c>System.Collections</c>, and <c>System.Collections.Generic</c> in <see cref="KnownAssemblies"/></item>
+    /// <item>Unlimited deserialization memory</item>
     /// <item>No custom resolvers</item>
     /// </list>
     /// </summary>
@@ -48,6 +57,7 @@ public class DozerSerializerOptions : ICloneable
             typeof(IEnumerable).Assembly,
             typeof(IEnumerable<>).Assembly
         ];
+        MaxAllocatedBytes = int.MaxValue;
         Resolvers = [];
     }
 
@@ -59,6 +69,7 @@ public class DozerSerializerOptions : ICloneable
     {
         AssemblyLoader = other.AssemblyLoader;
         KnownAssemblies = other.KnownAssemblies.ToList();
+        MaxAllocatedBytes = other.MaxAllocatedBytes;
         Resolvers = other.Resolvers.ToList();
     }
 

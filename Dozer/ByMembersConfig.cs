@@ -13,10 +13,9 @@ namespace DouglasDwyer.Dozer;
 internal sealed class ByMembersConfig
 {
     /// <summary>
-    /// A generic method for getting the managed size of an object.
+    /// Whether the output of <see cref="BlitFormatter{T}"/> and <see cref="ByMembersFormatter{T}"/>
+    /// would be identical for this given type.
     /// </summary>
-    private static readonly MethodInfo UnsafeSizeOf = typeof(Unsafe).GetMethod(nameof(Unsafe.SizeOf))!;
-
     public readonly bool Blittable;
 
     /// <summary>
@@ -70,11 +69,11 @@ internal sealed class ByMembersConfig
                     return false;
                 }
 
-                nonPaddingBytes += ManagedSize(field.FieldType);
+                nonPaddingBytes += SerializationHelpers.SizeOf(field.FieldType);
             }
         }
 
-        return nonPaddingBytes == ManagedSize(target);
+        return nonPaddingBytes == SerializationHelpers.SizeOf(target);
     }
 
     /// <summary>
@@ -93,16 +92,6 @@ internal sealed class ByMembersConfig
             currentType = currentType.BaseType;
         }
         return result;
-    }
-
-    /// <summary>
-    /// Gets the total number of bytes that one instance of <paramref name="type"/> takes in managed memory.
-    /// </summary>
-    /// <param name="type">The type in question.</param>
-    /// <returns>The size of the type, in bytes.</returns>
-    private static int ManagedSize(Type type)
-    {
-        return (int)UnsafeSizeOf.MakeGenericMethod(type).Invoke(null, null)!;
     }
 
     /// <summary>

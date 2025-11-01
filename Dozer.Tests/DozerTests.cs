@@ -107,6 +107,21 @@ namespace DouglasDwyer.Dozer.Tests
             Assert.AreEqual(target, deserialized);
         }
 
+        /// <summary>
+        /// Tests that deserialization will fail if the <see cref="DozerSerializerOptions.MaxAllocatedBytes"/> limit is exceeded.
+        /// </summary>
+        [TestMethod]
+        public void TestMaxAllocationBytes()
+        {
+            Assert.ThrowsException<InvalidDataException>(() =>
+            {
+                var serializer = new DozerSerializer(new DozerSerializerOptions() { MaxAllocatedBytes = 3 });
+
+                var bytes = serializer.Serialize<object>(4);
+                serializer.Deserialize<object>(bytes);
+            });
+        }
+
         [DefaultFormatter(typeof(TestCustomFormatter))]
         private class TestCustom
         {

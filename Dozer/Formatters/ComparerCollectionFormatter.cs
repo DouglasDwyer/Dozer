@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
@@ -84,10 +85,11 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out A value)
     {
-        var count = (int)reader.ReadVarUInt32();
+        var count = reader.ReadVarUInt32();
 
         _comparerFormatter.Deserialize(reader, out var comparer);
-        value = _newCollection(count, comparer);
+        reader.Context.ConsumeBytes(count * Unsafe.SizeOf<T>());
+        value = _newCollection((int)count, comparer);
 
         for (var i = 0; i < count; i++)
         {

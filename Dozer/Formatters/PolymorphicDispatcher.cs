@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -24,6 +25,18 @@ internal static class PolymorphicDispatcher
     public static IFormatter<object> Create(Type type, IFormatter contentFormatter)
     {
         return (IFormatter<object>)Activator.CreateInstance(HandlerTypeFor(type), contentFormatter)!;
+    }
+
+    /// <summary>
+    /// Calculates a lower bound on the memory, in bytes, that an instance of <paramref name="type"/>
+    /// would consume on the heap.
+    /// </summary>
+    /// <param name="type">The type in question.</param>
+    /// <returns>The sum of <see cref="SerializationHelpers.SizeOf(Type)"/> for all the object's fields.</returns>
+    private static int ApproximateHeapSize(Type type)
+    {
+        return type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Aggregate(0, (acc, x) => acc + SerializationHelpers.SizeOf(x.FieldType));
     }
 
     /// <summary>
@@ -62,6 +75,11 @@ internal static class PolymorphicDispatcher
         private readonly IFormatter<T> _contentFormatter;
 
         /// <summary>
+        /// The approximate size of <typeparamref name="T"/> on the heap.
+        /// </summary>
+        private readonly int _objectHeapSize;
+
+        /// <summary>
         /// Creates a new handler object.
         /// </summary>
         /// <param name="contentFormatter">
@@ -70,11 +88,13 @@ internal static class PolymorphicDispatcher
         public ClassDispatcher(IFormatter<T> contentFormatter)
         {
             _contentFormatter = contentFormatter;
+            _objectHeapSize = ApproximateHeapSize(typeof(T));
         }
 
         /// <inheritdoc/>
         public void Deserialize(BufferReader reader, out object value)
         {
+            reader.Context.ConsumeBytes(_objectHeapSize);
             value = null!;
 
             // Safety: result starts off as null and is only read/written by the deserializer,
@@ -125,6 +145,7 @@ internal static class PolymorphicDispatcher
         /// <inheritdoc/>
         public void Deserialize(BufferReader reader, out object value)
         {
+            reader.Context.ConsumeBytes(Unsafe.SizeOf<T>());
             value = default(T)!;
             _contentFormatter.Deserialize(reader, out Unsafe.Unbox<T>(value));
         }
@@ -166,6 +187,7 @@ internal static class PolymorphicDispatcher
         /// <inheritdoc/>
         public void Deserialize(BufferReader reader, out object value)
         {
+            reader.Context.ConsumeBytes(Unsafe.SizeOf<T>());
             // Note: it should be impossible for readonly structs to contain a cyclic reference.
             // Therefore, it is safe to call deserialize before allocating the boxed object.
             _contentFormatter.Deserialize(reader, out var result);

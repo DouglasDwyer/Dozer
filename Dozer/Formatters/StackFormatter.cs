@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
@@ -28,6 +29,7 @@ public sealed class StackFormatter<T> : IFormatter<Stack<T?>>
     {
         var count = (int)reader.ReadVarUInt32();
 
+        reader.Context.ConsumeBytes(count * Unsafe.SizeOf<T>());
         value = new Stack<T?>(count);
 
         var array = ArrayPool<T?>.Shared.Rent(count);

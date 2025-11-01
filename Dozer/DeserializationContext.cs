@@ -16,6 +16,16 @@ internal class DeserializationContext : IResettable
     public static readonly DefaultObjectPool<DeserializationContext> Pool = new DefaultObjectPool<DeserializationContext>(new DefaultPooledObjectPolicy<DeserializationContext>());
 
     /// <summary>
+    /// The maximum amount of heap memory that a deserialization operation may consume.
+    /// </summary>
+    public int MaxAllocatedBytes;
+
+    /// <summary>
+    /// Tracks the total amount of heap memory that has been allocated so far.
+    /// </summary>
+    private long _allocatedBytes;
+
+    /// <summary>
     /// A map from integer IDs to the associated objects.
     /// </summary>
     private readonly ObjectRefList _references;
@@ -41,6 +51,22 @@ internal class DeserializationContext : IResettable
         var index = _references.Count;
         _references.Add(null);
         return ref _references[index];
+    }
+
+    /// <summary>
+    /// Adds an additional <paramref name="count"/> bytes to the allocation tracker.
+    /// </summary>
+    /// <param name="count"></param>
+    /// <exception cref="InvalidDataException">
+    /// If the <see cref="DozerSerializerOptions.MaxAllocatedBytes"/> limit is exceeded.
+    /// </exception>
+    public void ConsumeBytes(long count)
+    {
+        _allocatedBytes += count;
+        if (MaxAllocatedBytes < _allocatedBytes)
+        {
+            throw new InvalidDataException($"Exceeded deserialization memory limit of {MaxAllocatedBytes} bytes");
+        }
     }
 
     /// <summary>
@@ -79,6 +105,7 @@ internal class DeserializationContext : IResettable
     /// <inheritdoc/>
     public bool TryReset()
     {
+        _allocatedBytes = 0;
         _references.Clear();
         return true;
     }

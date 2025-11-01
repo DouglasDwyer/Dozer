@@ -66,14 +66,14 @@ public sealed class TypeFormatter : IFormatter<Type>
             case TypeKind.SZArray:
             {
                 _typeReferenceFormatter.Deserialize(reader, out var element);
-                ThrowInvalidDataExceptionIfNull(element, "Array type was not encoded properly: expected element type, but got null");
+                SerializationHelpers.ThrowIfNull(element, "Array type was not encoded properly: expected element type, but got null");
                 value = element.MakeArrayType();
                 break;
             }
             case TypeKind.Array:
             {
                 _typeReferenceFormatter.Deserialize(reader, out var element);
-                ThrowInvalidDataExceptionIfNull(element, "Array type was not encoded properly: expected element type, but got null");
+                SerializationHelpers.ThrowIfNull(element, "Array type was not encoded properly: expected element type, but got null");
                 value = element.MakeArrayType(metadata.Dimensions);
                 break;
             }
@@ -92,7 +92,7 @@ public sealed class TypeFormatter : IFormatter<Type>
             case TypeKind.ConstructedGeneric:
             {
                 _typeReferenceFormatter.Deserialize(reader, out var definition);
-                ThrowInvalidDataExceptionIfNull(definition, "Generic type was not encoded properly: expected type definition, but got null");
+                SerializationHelpers.ThrowIfNull(definition, "Generic type was not encoded properly: expected type definition, but got null");
 
                 var typeCount = _genericArgumentsCache.GetValue(definition!, x => x.GetGenericArguments()).Length;
                 var types = new Type[typeCount];
@@ -100,7 +100,7 @@ public sealed class TypeFormatter : IFormatter<Type>
                 for (var i = 0; i < typeCount; i++)
                 {
                     _typeReferenceFormatter.Deserialize(reader, out var argument);
-                    ThrowInvalidDataExceptionIfNull(argument, "Generic type was not encoded properly: expected type argument, but got null");
+                    SerializationHelpers.ThrowIfNull(argument, "Generic type was not encoded properly: expected type argument, but got null");
                     types[i] = argument;
                 }
 
@@ -130,7 +130,7 @@ public sealed class TypeFormatter : IFormatter<Type>
             {
                 var fullName = reader.ReadString();
                 _assemblyFormatter.Deserialize(reader, out var assembly);
-                ThrowInvalidDataExceptionIfNull(assembly, "Type was not encoded properly: expected assembly, but got null");
+                SerializationHelpers.ThrowIfNull(assembly, "Type was not encoded properly: expected assembly, but got null");
                 var result = assembly.GetType(fullName);
 
                 if (result is null)
@@ -212,22 +212,6 @@ public sealed class TypeFormatter : IFormatter<Type>
     private static string PersistentTypeName(Type type)
     {
         return $"[{type.Assembly.GetName().Name}]{type.FullName!}";
-    }
-
-    /// <summary>
-    /// If <paramref name="value"/> is null, then throws an exception.
-    /// </summary>
-    /// <param name="value">The object to check.</param>
-    /// <param name="message">A message to include in the exception.</param>
-    /// <exception cref="InvalidDataException">
-    /// The exception that will be thrown.
-    /// </exception>
-    private void ThrowInvalidDataExceptionIfNull([NotNull] object? value, string message)
-    {
-        if (value is null)
-        {
-            throw new InvalidDataException(message);
-        }
     }
 
     /// <summary>
