@@ -7,17 +7,17 @@ namespace TestProject
         public bool Car;
     }
 
-    [DozerConfig]
+    [DozerIncludeFields(Accessibility.All, FieldMutability.All)]
+    [DozerIncludeProperties(Accessibility.All, PropertyMutability.All)]
     public sealed class Cyclic
     {
-        public string Foo { get; set; }
-        public Cyclic?[] Next { get; set; }
+        public string Foo { get; init; }
+        public Cyclic?[] Next { get; init; }
 
         [DozerExclude]
         public int DoNotSerialize;
 
-        [DozerInclude]
-        private readonly int PleaseSerialize = 23;
+        private int PleaseSerialize = 23;
 
         public Cyclic() { }
 
@@ -47,11 +47,11 @@ namespace TestProject
 
             var serializer = new DozerSerializer(options);
 
-            //var ppp = new Cyclic { Foo = "pepee", Next = new Cyclic?[2] };
-            var ppp = new[] { new OneTwoOatmeal { Ex = 2, Hi = 42, Why = 'L' } };
+            var ppp = new Cyclic(28) { Foo = "pepee", Next = new Cyclic?[2], DoNotSerialize = 59 };
+            //var ppp = new[] { new OneTwoOatmeal { Ex = 2, Hi = 42, Why = 'L' } };
 
-            var ser = serializer.Serialize<OneTwoOatmeal[]>(ppp);
-            var deser = serializer.Deserialize<OneTwoOatmeal[]>(ser);
+            var ser = serializer.Serialize<Kirby>(Kirby.Oatmeal);
+            var deser = serializer.Deserialize<Kirby>(ser);
 
             Console.WriteLine("Hello, World!");
         }

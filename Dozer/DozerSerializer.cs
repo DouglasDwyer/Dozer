@@ -68,6 +68,7 @@ public sealed class DozerSerializer
         new ComparerCollectionResolver(),
         new CollectionResolver(),
         new BlitResolver(),
+        new EnumResolver(),
         new SingletonResolver(new PrimitiveFormatter()),
         // todo: allow serializing names or not (if names, then no blitting..!)
         new ByMembersResolver(),
@@ -96,7 +97,7 @@ public sealed class DozerSerializer
     /// <summary>
     /// Metadata that controls by-member serialization.
     /// </summary>
-    private readonly ConditionalWeakTable<Type, ByMembersConfig> _typeConfigs;
+    private readonly ConditionalWeakTable<Type, ByMembersConfig?> _typeConfigs;
 
     /// <summary>
     /// Creates a new serializer with default options.
@@ -122,7 +123,7 @@ public sealed class DozerSerializer
         _contentFormatters = new ConditionalWeakTable<Type, ContentFormatters>();
         _options = options;
         _referenceFormatters = new ConditionalWeakTable<Type, IFormatter>();
-        _typeConfigs = new ConditionalWeakTable<Type, ByMembersConfig>();
+        _typeConfigs = new ConditionalWeakTable<Type, ByMembersConfig?>();
     }
 
     /// <inheritdoc cref="Serialize{T}(IBufferWriter{byte}, in T)"/>
@@ -369,9 +370,9 @@ public sealed class DozerSerializer
     /// <returns>
     /// The configuration to use.
     /// </returns>
-    private ByMembersConfig CreateTypeConfig(Type type)
+    private ByMembersConfig? CreateTypeConfig(Type type)
     {
-        return new ByMembersConfig(this, type);
+        return ByMembersConfig.Load(this, type);
     }
 
     /// <summary>
@@ -383,12 +384,12 @@ public sealed class DozerSerializer
         /// The "value" formatter that defines how to serialize the actual contents of this type.
         /// This formatter does not deal with references or polymorphism.
         /// </summary>
-        public required IFormatter ContentFormatter;
+        public required IFormatter ContentFormatter { get; init; }
 
         /// <summary>
         /// A shim for invoking the <see cref="ContentFormatter"/> in a weakly-typed context.
         /// This is used when serializing polymorphic reference types and boxed value types.
         /// </summary>
-        public required IFormatter<object> PolymorphicDispatcher;
+        public required IFormatter<object> PolymorphicDispatcher { get; init; }
     }
 }

@@ -1,10 +1,9 @@
 ﻿using FastExpressionCompiler;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
@@ -13,6 +12,11 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 public class ByMembersFormatter<T> : IFormatter<T>
 {
+    /// <summary>
+    /// The <see cref="MethodInfo"/> for <see cref="RuntimeHelpers.GetUninitializedObject"/>.
+    /// </summary>
+    private static readonly MethodInfo GetUninitializedObject = typeof(RuntimeHelpers).GetMethod(nameof(RuntimeHelpers.GetUninitializedObject))!;
+
     /// <summary>
     /// The function type that is created for deserialization.
     /// </summary>
@@ -76,8 +80,11 @@ public class ByMembersFormatter<T> : IFormatter<T>
     {
         var readerParam = Expression.Parameter(typeof(BufferReader), "reader");
         var valueParam = Expression.Parameter(config.Target.MakeByRefType(), "value");
+        var newExpression = config.ConstructUninit
+            ? (Expression)Expression.ConvertChecked(Expression.Call(GetUninitializedObject, Expression.Constant(config.Target)), config.Target)
+            : Expression.New(config.Target);
         var body = Expression.Block(config.IncludedMembers.Select(x => CreateDeserializeExpression(x, readerParam, valueParam))
-            .Prepend(Expression.Assign(valueParam, Expression.New(config.Target)))); //todo
+            .Prepend(Expression.Assign(valueParam, newExpression)));
         var lambda = Expression.Lambda<DeserializeDelegate>(body, readerParam, valueParam);
         return lambda.CompileFast(false, CompilerFlags.DisableInterpreter | CompilerFlags.ThrowOnNotSupportedExpression);
     }
