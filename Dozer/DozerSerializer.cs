@@ -1,8 +1,11 @@
 ﻿using DouglasDwyer.Dozer.Formatters;
+using DouglasDwyer.Dozer.Resolvers;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -46,16 +49,43 @@ public sealed class DozerSerializer
         typeof(char),
     ] : [typeof(byte)];
 
-    // todo: prevent mutation :(
+    /// <summary>
+    /// A list of builtin resolvers to use if no custom user-defined formatter is found.
+    /// </summary>
+    private ImmutableArray<IFormatterResolver> BuiltinResolvers = [
+        new GenericResolver(typeof(AssemblyFormatter)),
+        new GenericResolver(typeof(MethodBaseFormatter)),
+        new GenericResolver(typeof(ModuleFormatter)),
+        new GenericResolver(typeof(TypeFormatter)),
+        new AttributeResolver(),
+        new ArrayResolver(),
+        new SingletonResolver(new CultureInfoFormatter()),
+        new SingletonResolver(new ReferenceEqualityComparerFormatter()),
+        new GenericResolver(typeof(KeyValuePairFormatter<,>)),
+        new GenericResolver(typeof(ListFormatter<>)),
+        new GenericResolver(typeof(QueueFormatter<>)),
+        new GenericResolver(typeof(StackFormatter<>)),
+        new ComparerCollectionResolver(),
+        new CollectionResolver(),
+        new BlitResolver(),
+        new SingletonResolver(new PrimitiveFormatter()),
+        new ByMembersResolver(),
+    ];
+
     /// <summary>
     /// The options that this serializer will use.
     /// </summary>
-    public readonly DozerSerializerOptions Options;
+    public DozerSerializerOptions Options => new DozerSerializerOptions(_options);
 
     /// <summary>
     /// Formatters that are used to serialize the actual contents of objects.
     /// </summary>
     private readonly ConditionalWeakTable<Type, ContentFormatters> _contentFormatters;
+
+    /// <summary>
+    /// The options for this serializer.
+    /// </summary>
+    private readonly DozerSerializerOptions _options;
 
     /// <summary>
     /// Formatters that are used to serialize reference types and boxed value types.
@@ -67,8 +97,20 @@ public sealed class DozerSerializer
     /// </summary>
     private readonly ConditionalWeakTable<Type, ByMembersConfig> _typeConfigs;
 
+    /// <summary>
+    /// Creates a new serializer with default options.
+    /// </summary>
     public DozerSerializer() : this(new DozerSerializerOptions()) { }
 
+    /// <summary>
+    /// Creates a new serializer.
+    /// </summary>
+    /// <param name="options">
+    /// Options that control serialization.
+    /// </param>
+    /// <exception cref="PlatformNotSupportedException">
+    /// If the runtime does not support dynamic code generation.
+    /// </exception>
     public DozerSerializer(DozerSerializerOptions options)
     {
         if (!RuntimeFeature.IsDynamicCodeSupported)
@@ -77,10 +119,9 @@ public sealed class DozerSerializer
         }
 
         _contentFormatters = new ConditionalWeakTable<Type, ContentFormatters>();
+        _options = options;
         _referenceFormatters = new ConditionalWeakTable<Type, IFormatter>();
         _typeConfigs = new ConditionalWeakTable<Type, ByMembersConfig>();
-
-        Options = options;
     }
 
     /// <inheritdoc cref="Serialize{T}(IBufferWriter{byte}, in T)"/>
@@ -288,7 +329,7 @@ public sealed class DozerSerializer
         }
 
         IFormatter? contentFormatter = null;
-        foreach (var resolver in Options.Resolvers)
+        foreach (var resolver in _options.Resolvers.Concat(BuiltinResolvers))
         {
             if (resolver.GetFormatter(this, type) is IFormatter newFormatter)
             {
