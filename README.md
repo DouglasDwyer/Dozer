@@ -48,7 +48,7 @@ For documentation about all functionality included in Dozer, please see the [com
 | [Thread-safe](## "Whether a single serializer instance can be used across threads") | ✔️ | ❌ | ✔️ |
 | [Standard types](## "Whether the library has out-of-the-box serializers for C# standard library types") | ✔️ | 🟡 (missing types from .NET 6+) | ✔️ |
 | [AoT support](## "Whether the library can work without dynamic code generation") | ✔️  | ✔️ | ❌ |
-| [Version tolerance](## "Whether the fields of a single type can be changed without invalidating existing serialized data") | ✔️  | ✔️ | ❌ || [Version tolerance](## "Whether the fields of a single type can be changed without invalidating existing serialized data") | ✔️  | ✔️ | ❌ |
+| [Version tolerance](## "Whether the fields of a single type can be changed without invalidating existing serialized data") | ✔️  | ✔️ | ❌ |
 | [Last update](## "The last time that the repository had a commit") | ![Last Commit](https://img.shields.io/github/last-commit/MessagePack-CSharp/MessagePack-CSharp?color=lightgrey&label=Last%20commit&style=flat) | ![Last Commit](https://img.shields.io/github/last-commit/rikimaru0345/Ceras?color=lightgrey&label=Last%20commit&style=flat) | ![Last Commit](https://img.shields.io/github/last-commit/DouglasDwyer/Dozer?color=lightgrey&label=Last%20commit&style=flat) |
 
 #### Improvements over MessagePack/Ceras
