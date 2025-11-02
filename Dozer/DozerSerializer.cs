@@ -1,4 +1,5 @@
-﻿using DouglasDwyer.Dozer.Formatters;
+﻿using CommunityToolkit.HighPerformance.Buffers;
+using DouglasDwyer.Dozer.Formatters;
 using DouglasDwyer.Dozer.Resolvers;
 using System;
 using System.Buffers;
@@ -59,10 +60,13 @@ public sealed class DozerSerializer
         new GenericResolver(typeof(TypeFormatter)),
         new AttributeResolver(),
         new ArrayResolver(),
+        new MemoryResolver(),
         new SingletonResolver(new CultureInfoFormatter()),
+        new SingletonResolver(new GuidFormatter()),
         new SingletonResolver(new ReferenceEqualityComparerFormatter()),
         new GenericResolver(typeof(KeyValuePairFormatter<,>)),
         new GenericResolver(typeof(ListFormatter<>)),
+        new GenericResolver(typeof(NullableFormatter<>)),
         new GenericResolver(typeof(QueueFormatter<>)),
         new GenericResolver(typeof(StackFormatter<>)),
         new ComparerCollectionResolver(),
@@ -136,6 +140,33 @@ public sealed class DozerSerializer
     }
 
     /// <summary>
+    /// Converts the provided value to binary data, writing the output
+    /// to memory borrowed from <paramref name="pool"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the value.</typeparam>
+    /// <param name="pool">The pool from which to borrow output buffer(s).</param>
+    /// <param name="value">The value to convert.</param>
+    /// <returns>
+    /// A memory owner referencing the borrowed byte array. This can be disposed
+    /// to return the memory to the pool.
+    /// </returns>
+    public IMemoryOwner<byte> Serialize<T>(ArrayPool<byte> pool, in T? value)
+    {
+        var writer = new ArrayPoolBufferWriter<byte>(pool);
+
+        try
+        {
+            Serialize(writer, value);
+            return writer;
+        }
+        catch
+        {
+            writer.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Converts the provided value to binary data.
     /// </summary>
     /// <typeparam name="T">The type of the value.</typeparam>
@@ -181,7 +212,7 @@ public sealed class DozerSerializer
     /// <exception cref="MissingFormatterException">
     /// If no formatter could be found to deserialize the type.
     /// </exception>
-    public T? Deserialize<T>(ReadOnlySpan<byte> data)
+    public T Deserialize<T>(ReadOnlySpan<byte> data)
     {
         var result = Deserialize<T>(ref data);
         
@@ -212,7 +243,7 @@ public sealed class DozerSerializer
     /// <exception cref="MissingFormatterException">
     /// If no formatter could be found to serialize the type.
     /// </exception>
-    public T? Deserialize<T>(ref ReadOnlySpan<byte> data)
+    public T Deserialize<T>(ref ReadOnlySpan<byte> data)
     {
         var context = DeserializationContext.Pool.Get();
         context.MaxAllocatedBytes = _options.MaxAllocatedBytes;
@@ -222,7 +253,7 @@ public sealed class DozerSerializer
             var position = 0;
             GetFormatter<T>().Deserialize(new BufferReader(context, data, ref position), out var result);
             data = data[position..];
-            return result;
+            return result!;
         }
         finally
         {

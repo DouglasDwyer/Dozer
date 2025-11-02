@@ -66,7 +66,7 @@ internal sealed class ByMembersConfig
         }
 
         var constructUninit = type.GetCustomAttribute<DozerConstructUninitAttribute>() is not null;
-        var canConstruct = constructUninit || type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, []) is not null;
+        var canConstruct = constructUninit || type.IsValueType || type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, []) is not null;
 
         if (!canConstruct)
         {

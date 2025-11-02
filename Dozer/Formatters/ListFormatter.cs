@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace DouglasDwyer.Dozer.Formatters;
@@ -36,6 +37,7 @@ public sealed class ListFormatter<T> : IFormatter<List<T?>>
     {
         var count = (int)reader.ReadVarUInt32();
 
+        reader.Context.ConsumeBytes(count * Unsafe.SizeOf<T>());
         value = new List<T?>(count);
         CollectionsMarshal.SetCount(value, count);
 
