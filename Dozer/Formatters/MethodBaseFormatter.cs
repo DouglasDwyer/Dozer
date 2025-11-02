@@ -19,19 +19,19 @@ public sealed class MethodBaseFormatter : IFormatter<MethodBase>
     /// A reference serializer that will recursively fall back to this
     /// <see cref="MethodBaseFormatter"/> when it encounters a new type.
     /// </summary>
-    private readonly IFormatter<MethodBase?> _methodReferenceFormatter;
+    private readonly IFormatter<MethodBase> _methodReferenceFormatter;
 
     /// <summary>
     /// Formats module references. Used when serializing methods
     /// without a declaring type.
     /// </summary>
-    private readonly IFormatter<Module?> _moduleFormatter;
+    private readonly IFormatter<Module> _moduleFormatter;
 
     /// <summary>
     /// Formats method references. Used when serializing the parameter types
     /// of methods.
     /// </summary>
-    private readonly IFormatter<Type?> _typeFormatter;
+    private readonly IFormatter<Type> _typeFormatter;
 
     /// <summary>
     /// Creates a new formatter.
@@ -69,14 +69,12 @@ public sealed class MethodBaseFormatter : IFormatter<MethodBase>
             if (kind == MethodKind.ModuleDefinition)
             {
                 _moduleFormatter.Deserialize(reader, out var declaringModule);
-                SerializationHelpers.ThrowIfNull(declaringModule, "Method was not encoded properly: expected declaring module, but got null");
                 declaringObject = declaringModule;
                 methods = declaringModule!.GetMethods(AllMembers);
             }
             else
             {
                 _typeFormatter.Deserialize(reader, out var declaringType);
-                SerializationHelpers.ThrowIfNull(declaringType, "Method was not encoded properly: expected declaring type, but got null");
                 declaringObject = declaringType;
                 methods = kind == MethodKind.ConstructorDefinition ? declaringType.GetConstructors(AllMembers) : declaringType.GetMethods(AllMembers);
             }
@@ -199,7 +197,6 @@ public sealed class MethodBaseFormatter : IFormatter<MethodBase>
             default:
             {
                 _typeFormatter.Deserialize(reader, out var definition);
-                SerializationHelpers.ThrowIfNull(definition, "Method was not encoded properly: expected generic definition, but got null");
                 var parameterMatchers = new Func<Type, bool>[definition!.GetGenericArguments().Length];
 
                 for (var i = 0; i < parameterMatchers.Length; i++)

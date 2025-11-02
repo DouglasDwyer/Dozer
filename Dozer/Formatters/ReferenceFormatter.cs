@@ -32,7 +32,7 @@ internal sealed class ReferenceFormatter<T> : IFormatter<T?> where T : class
     /// <summary>
     /// If this is a polymorphic formatter, then the subformatter to use for recording object types.
     /// </summary>
-    private IFormatter<Type?>? _typeFormatter;
+    private IFormatter<Type>? _typeFormatter;
 
     /// <summary>
     /// Instantiates a new reference formatter.
@@ -67,12 +67,6 @@ internal sealed class ReferenceFormatter<T> : IFormatter<T?> where T : class
             else
             {
                 _typeFormatter!.Deserialize(reader, out var type);
-                
-                if (type is null)
-                {
-                    throw new InvalidDataException("Polymorphic type was not encoded properly: expected type, but got null");
-                }
-
                 _serializer.GetPolymorphicDispatcher(type).Deserialize(reader, out slot);
             }
 

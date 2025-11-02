@@ -37,7 +37,7 @@ public sealed class MemoryFormatter<T, A> : IFormatter<A>
                 throw new ArgumentException($"Type {typeof(T)} was not the correct element type for {typeof(A)}", nameof(T));
         }
 
-        _elementFormatter = serializer.GetFormatter<T>();
+        _elementFormatter = serializer.GetFormatter<T?>();
         _spanFormatter = _elementFormatter as ISpanFormatter<T?>;
     }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace DouglasDwyer.Dozer.Formatters;
 
@@ -21,7 +20,7 @@ public sealed class CollectionFormatter<T, A> : IFormatter<A> where A : ICollect
     /// <param name="serializer">The associated serializer.</param>
     public CollectionFormatter(DozerSerializer serializer)
     {
-        _elementFormatter = serializer.GetFormatter<T>();
+        _elementFormatter = serializer.GetFormatter<T?>();
     }
 
     /// <inheritdoc/>

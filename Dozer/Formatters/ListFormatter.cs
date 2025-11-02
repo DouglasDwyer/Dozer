@@ -28,7 +28,7 @@ public sealed class ListFormatter<T> : IFormatter<List<T?>>
     /// <param name="serializer">The associated serializer.</param>
     public ListFormatter(DozerSerializer serializer)
     {
-        _elementFormatter = serializer.GetFormatter<T>();
+        _elementFormatter = serializer.GetFormatter<T?>();
         _spanFormatter = _elementFormatter as ISpanFormatter<T?>;
     }
 

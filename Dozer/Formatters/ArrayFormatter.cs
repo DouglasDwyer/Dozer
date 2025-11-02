@@ -17,11 +17,6 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
     private readonly IFormatter<T?> _elementFormatter;
 
     /// <summary>
-    /// The maximum allowed array size.
-    /// </summary>
-    private readonly int _maxCollectionSize;
-
-    /// <summary>
     /// A formatter that can serialize an entire fixed-size span with one call.
     /// This is primarily used as an optimization with <see cref="BlitFormatter{T}"/>.
     /// </summary>
@@ -47,7 +42,7 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
             throw new ArgumentException($"Generic parameter {typeof(T)} did not match expected array element type {typeof(A)}", nameof(T));
         }
 
-        _elementFormatter = serializer.GetFormatter<T>();
+        _elementFormatter = serializer.GetFormatter<T?>();
         _spanFormatter = _elementFormatter as ISpanFormatter<T?>;
     }
 

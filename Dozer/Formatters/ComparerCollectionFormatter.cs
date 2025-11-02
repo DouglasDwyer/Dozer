@@ -67,8 +67,8 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
             throw new ArgumentException("Collection comparer did not take elements of the specified type", nameof(K));
         }
 
-        _comparerFormatter = serializer.GetFormatter<object>();
-        _elementFormatter = serializer.GetFormatter<T>();
+        _comparerFormatter = serializer.GetFormatter<object?>();
+        _elementFormatter = serializer.GetFormatter<T?>();
         
         _getComparer = (Func<A, object?>)Delegate.CreateDelegate(typeof(Func<A, object?>), comparerProperty.GetMethod);
 
@@ -104,30 +104,11 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
         writer.WriteVarUInt32((uint)value.Count);
 
         var comparer = _getComparer(value);
-        _comparerFormatter.Serialize(writer, IsDefaultInternalComparer(comparer) ? null : comparer);
+        _comparerFormatter.Serialize(writer, SerializationHelpers.IsInternalSystemObject(comparer) ? null : comparer);
 
         foreach (var element in value)
         {
             _elementFormatter.Serialize(writer, element);
-        }
-    }
-
-    /// <summary>
-    /// Determines whether <paramref name="comparer"/> is the default, system-internal comparer for
-    /// keys of type <typeparamref name="K"/>.
-    /// </summary>
-    /// <param name="comparer">The comparer in question, if any.</param>
-    /// <returns>Whether it is the default when <typeparamref name="A"/> is constructed without a comparer.</returns>
-    private static bool IsDefaultInternalComparer(object? comparer)
-    {
-        if (comparer is null)
-        {
-            return false;
-        }
-        else
-        {
-            var comparerType = comparer.GetType();
-            return !comparerType.IsPublic && comparerType.Assembly == typeof(object).Assembly;
         }
     }
 }

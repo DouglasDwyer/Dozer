@@ -17,6 +17,24 @@ internal static class SerializationHelpers
     private static readonly MethodInfo UnsafeSizeOf = typeof(Unsafe).GetMethod(nameof(Unsafe.SizeOf))!;
 
     /// <summary>
+    /// Determines whether <paramref name="value"/> is an internal object that comes from the C# standard library.
+    /// </summary>
+    /// <param name="value">The value in question.</param>
+    /// <returns><c>true</c> if <paramref name="value"/> is non-null, not publicly nameable, and a part of the <c>System</c> assembly.</returns>
+    public static bool IsInternalSystemObject(object? value)
+    {
+        if (value is null)
+        {
+            return false;
+        }
+        else
+        {
+            var type = value.GetType();
+            return !type.IsPublic && type.Assembly == typeof(object).Assembly;
+        }
+    }
+
+    /// <summary>
     /// Gets the total number of bytes that one instance of <paramref name="type"/> takes in managed memory.
     /// </summary>
     /// <param name="type">The type in question.</param>
@@ -24,21 +42,5 @@ internal static class SerializationHelpers
     public static int SizeOf(Type type)
     {
         return (int)UnsafeSizeOf.MakeGenericMethod(type).Invoke(null, null)!;
-    }
-
-    /// <summary>
-    /// If <paramref name="value"/> is null, then throws an exception.
-    /// </summary>
-    /// <param name="value">The object to check.</param>
-    /// <param name="message">A message to include in the exception.</param>
-    /// <exception cref="InvalidDataException">
-    /// The exception that will be thrown.
-    /// </exception>
-    public static void ThrowIfNull([NotNull] object? value, string message)
-    {
-        if (value is null)
-        {
-            throw new InvalidDataException(message);
-        }
     }
 }

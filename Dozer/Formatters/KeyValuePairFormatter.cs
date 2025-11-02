@@ -2,15 +2,31 @@
 
 namespace DouglasDwyer.Dozer.Formatters;
 
+/// <summary>
+/// Handles serialization of <see cref="KeyValuePair{TKey, TValue}"/> objects.
+/// </summary>
+/// <typeparam name="K">The key type.</typeparam>
+/// <typeparam name="V">The value type.</typeparam>
 public sealed class KeyValuePairFormatter<K, V> : IFormatter<KeyValuePair<K?, V?>>
 {
+    /// <summary>
+    /// Serializes keys.
+    /// </summary>
     private readonly IFormatter<K?> _keyFormatter;
+
+    /// <summary>
+    /// Serializes values.
+    /// </summary>
     private readonly IFormatter<V?> _valueFormatter;
 
+    /// <summary>
+    /// Creates a new formatter.
+    /// </summary>
+    /// <param name="serializer">The associated serializer.</param>
     public KeyValuePairFormatter(DozerSerializer serializer)
     {
-        _keyFormatter = serializer.GetFormatter<K>();
-        _valueFormatter = serializer.GetFormatter<V>();
+        _keyFormatter = serializer.GetFormatter<K?>();
+        _valueFormatter = serializer.GetFormatter<V?>();
     }
 
     /// <inheritdoc/>

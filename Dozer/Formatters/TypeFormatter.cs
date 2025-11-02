@@ -15,7 +15,7 @@ public sealed class TypeFormatter : IFormatter<Type>
     /// <summary>
     /// Formats assembly references.
     /// </summary>
-    private readonly IFormatter<Assembly?> _assemblyFormatter;
+    private readonly IFormatter<Assembly> _assemblyFormatter;
 
     /// <summary>
     /// Caches the arrays of generic type arguments returned by <see cref="Type.GetGenericArguments"/>.
@@ -32,13 +32,13 @@ public sealed class TypeFormatter : IFormatter<Type>
     /// Formats method references. Used when serializing the generic
     /// type parameters of methods.
     /// </summary>
-    private readonly IFormatter<MethodBase?> _methodFormatter;
+    private readonly IFormatter<MethodBase> _methodFormatter;
 
     /// <summary>
     /// A reference serializer that will recursively fall back to this
     /// <see cref="TypeFormatter"/> when it encounters a new type.
     /// </summary>
-    private readonly IFormatter<Type?> _typeReferenceFormatter;
+    private readonly IFormatter<Type> _typeReferenceFormatter;
 
     /// <summary>
     /// Initializes a type formatter.
@@ -66,14 +66,12 @@ public sealed class TypeFormatter : IFormatter<Type>
             case TypeKind.SZArray:
             {
                 _typeReferenceFormatter.Deserialize(reader, out var element);
-                SerializationHelpers.ThrowIfNull(element, "Array type was not encoded properly: expected element type, but got null");
                 value = element.MakeArrayType();
                 break;
             }
             case TypeKind.Array:
             {
                 _typeReferenceFormatter.Deserialize(reader, out var element);
-                SerializationHelpers.ThrowIfNull(element, "Array type was not encoded properly: expected element type, but got null");
                 value = element.MakeArrayType(metadata.Dimensions);
                 break;
             }
@@ -92,7 +90,6 @@ public sealed class TypeFormatter : IFormatter<Type>
             case TypeKind.ConstructedGeneric:
             {
                 _typeReferenceFormatter.Deserialize(reader, out var definition);
-                SerializationHelpers.ThrowIfNull(definition, "Generic type was not encoded properly: expected type definition, but got null");
 
                 var typeCount = _genericArgumentsCache.GetValue(definition!, x => x.GetGenericArguments()).Length;
                 var types = new Type[typeCount];
@@ -100,7 +97,6 @@ public sealed class TypeFormatter : IFormatter<Type>
                 for (var i = 0; i < typeCount; i++)
                 {
                     _typeReferenceFormatter.Deserialize(reader, out var argument);
-                    SerializationHelpers.ThrowIfNull(argument, "Generic type was not encoded properly: expected type argument, but got null");
                     types[i] = argument;
                 }
 
@@ -130,7 +126,6 @@ public sealed class TypeFormatter : IFormatter<Type>
             {
                 var fullName = reader.ReadString();
                 _assemblyFormatter.Deserialize(reader, out var assembly);
-                SerializationHelpers.ThrowIfNull(assembly, "Type was not encoded properly: expected assembly, but got null");
                 var result = assembly.GetType(fullName);
 
                 if (result is null)
@@ -150,17 +145,17 @@ public sealed class TypeFormatter : IFormatter<Type>
         if (value.IsSZArray)
         {
             writer.WriteUInt8((byte)TypeMetadata.SZArray());
-            _typeReferenceFormatter.Serialize(writer, value.GetElementType());
+            _typeReferenceFormatter.Serialize(writer, value.GetElementType()!);
         }
         else if (value.IsArray)
         {
             writer.WriteUInt8((byte)TypeMetadata.Array(value.GetArrayRank()));
-            _typeReferenceFormatter.Serialize(writer, value.GetElementType());
+            _typeReferenceFormatter.Serialize(writer, value.GetElementType()!);
         }
         else if (value.IsGenericTypeParameter)
         {
             writer.WriteUInt8((byte)TypeMetadata.TypeParameter(value.GenericParameterPosition));
-            _typeReferenceFormatter.Serialize(writer, value.DeclaringType);
+            _typeReferenceFormatter.Serialize(writer, value.DeclaringType!);
         }
         else if (value.IsGenericMethodParameter)
         {

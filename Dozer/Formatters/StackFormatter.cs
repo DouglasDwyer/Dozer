@@ -21,7 +21,7 @@ public sealed class StackFormatter<T> : IFormatter<Stack<T?>>
     /// <param name="serializer">The associated serializer.</param>
     public StackFormatter(DozerSerializer serializer)
     {
-        _elementFormatter = serializer.GetFormatter<T>();
+        _elementFormatter = serializer.GetFormatter<T?>();
     }
 
     /// <inheritdoc/>

@@ -3,7 +3,6 @@ using DouglasDwyer.Dozer.Formatters;
 using DouglasDwyer.Dozer.Resolvers;
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -64,6 +63,14 @@ public sealed class DozerSerializer
         new SingletonResolver(new CultureInfoFormatter()),
         new SingletonResolver(new GuidFormatter()),
         new SingletonResolver(new ReferenceEqualityComparerFormatter()),
+        new GenericResolver(typeof(ImmutableArrayFormatter<>)),
+        new GenericResolver(typeof(ImmutableDictionaryFormatter<,>)),
+        new GenericResolver(typeof(ImmutableHashSetFormatter<>)),
+        new GenericResolver(typeof(ImmutableListFormatter<>)),
+        new GenericResolver(typeof(ImmutableQueueFormatter<>)),
+        new GenericResolver(typeof(ImmutableStackFormatter<>)),
+        new GenericResolver(typeof(ImmutableSortedDictionaryFormatter<,>)),
+        new GenericResolver(typeof(ImmutableSortedSetFormatter<>)),
         new GenericResolver(typeof(KeyValuePairFormatter<,>)),
         new GenericResolver(typeof(ListFormatter<>)),
         new GenericResolver(typeof(NullableFormatter<>)),
@@ -181,7 +188,7 @@ public sealed class DozerSerializer
         try
         {
             var state = new BufferWriter.State(context, writer);
-            GetFormatter<T>().Serialize(new BufferWriter(ref state), value);
+            GetFormatter<T?>().Serialize(new BufferWriter(ref state), value);
             state.Writer.Advance(state.CurrentBlockWritten);
         }
         finally
@@ -297,9 +304,9 @@ public sealed class DozerSerializer
     /// <exception cref="MissingFormatterException">
     /// If no formatter could be found to serialize/deserialize the type.
     /// </exception>
-    public IFormatter<T?> GetFormatter<T>()
+    public IFormatter<T> GetFormatter<T>()
     {
-        return (IFormatter<T?>)GetFormatter(typeof(T));
+        return (IFormatter<T>)GetFormatter(typeof(T));
     }
 
     /// <summary>

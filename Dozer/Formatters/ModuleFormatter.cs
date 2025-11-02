@@ -12,7 +12,7 @@ public sealed class ModuleFormatter : IFormatter<Module>
     /// <summary>
     /// Serializes assembly objects.
     /// </summary>
-    private readonly IFormatter<Assembly?> _assemblyFormatter;
+    private readonly IFormatter<Assembly> _assemblyFormatter;
 
     /// <summary>
     /// Creates a new formatter.
@@ -27,11 +27,6 @@ public sealed class ModuleFormatter : IFormatter<Module>
     public void Deserialize(BufferReader reader, out Module value)
     {
         _assemblyFormatter.Deserialize(reader, out var assembly);
-
-        if (assembly is null)
-        {
-            throw new InvalidDataException("Module was not encoded properly: expected assembly, but got null");
-        }
 
         var moduleName = reader.ReadString();
         var result = assembly.GetModule(moduleName);

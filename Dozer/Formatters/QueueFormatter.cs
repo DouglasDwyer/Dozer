@@ -21,7 +21,7 @@ public sealed class QueueFormatter<T> : IFormatter<Queue<T?>>
     /// <param name="serializer">The associated serializer.</param>
     public QueueFormatter(DozerSerializer serializer)
     {
-        _elementFormatter = serializer.GetFormatter<T>();
+        _elementFormatter = serializer.GetFormatter<T?>();
     }
 
     /// <inheritdoc/>
