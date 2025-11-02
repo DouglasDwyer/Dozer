@@ -1,6 +1,8 @@
 .DS_Store
 .vs/
-_site/
+docs/_site/
+docs/api/
+docs/.cache/
 bin/
 obj/
 TestProject/
