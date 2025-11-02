@@ -24,10 +24,11 @@ public sealed class DozerSerializer
     /// </summary>
     internal static readonly ImmutableHashSet<Type> ArtificallySealedTypes = [
         typeof(Assembly),
-        typeof(ConstructorInfo),
         typeof(FieldInfo),
         typeof(MethodBase),
         typeof(Module),
+        typeof(ParameterInfo),
+        typeof(PropertyInfo),
         typeof(Type),
     ];
 
@@ -54,8 +55,11 @@ public sealed class DozerSerializer
     /// </summary>
     private ImmutableArray<IFormatterResolver> BuiltinResolvers = [
         new GenericResolver(typeof(AssemblyFormatter)),
+        new GenericResolver(typeof(FieldInfoFormatter)),
         new GenericResolver(typeof(MethodBaseFormatter)),
         new GenericResolver(typeof(ModuleFormatter)),
+        new GenericResolver(typeof(ParameterInfoFormatter)),
+        new GenericResolver(typeof(PropertyInfoFormatter)),
         new GenericResolver(typeof(TypeFormatter)),
         new AttributeResolver(),
         new ArrayResolver(),

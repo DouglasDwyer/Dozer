@@ -35,6 +35,102 @@ Console.WriteLine(objs.SequenceEqual(deserialized));  // true
 
 For documentation about all functionality included in Dozer, please see the [complete API reference](https://douglasdwyer.github.io/Dozer/).
 
+### Customizing serialization
+
+#### Included fields and properties
+
+By default, Dozer will serialize anytype with a public parameterless constructor. Dozer will include all public fields, auto get-set properties, and auto get-init properties.
+
+```csharp
+public class Foo
+{
+    // All of these will be serialized.
+    public int Bar;
+    public string Baz { get; set; }
+    public double Buzz { get; init; }
+
+    // None of these will be serialized.
+    public readonly int Nope;
+    public string Nah { get; }
+    private float Huh;
+}
+```
+
+The following attributes can be used to customize serialization, but are not required:
+
+```csharp
+[DozerConstructUninit]
+public class Foo
+{
+    // This field will not be serialized
+    [DozerExclude]
+    public int Bar;
+    
+    // This field will be serialized
+    [DozerInclude]
+    private float Huh;
+
+    // The class does not have a public constructor, and so would not be
+    // serializable without the DozerConstructUninit attribute
+    private Foo() { }
+}
+
+[DozerIncludeFields(Accessibility.All, FieldMutability.All)]
+[DozerIncludeProperties(Accessibility.All, PropertyMutability.All)]
+public struct Fizz
+{
+    // This will be serialized because of FieldMutability.All
+    public readonly int Chef;
+
+    // This will be serialized because of Accessibility.All
+    private int Yert;
+    
+    // This will be serialized because of PropertyMutability.All
+    public string Yah { get; }
+}
+```
+
+#### Manually-defined formatter
+
+Internally, serialization is driven by objects implementing the `IFormatter<T>` interface:
+
+```csharp
+public interface IFormatter<T> : IFormatter
+{
+    void Deserialize(BufferReader reader, out T value);
+
+    void Serialize(BufferWriter writer, in T value);
+}
+```
+
+The logic for serializing a type by its members (and interpreting the aforementioned attributes) [is implemented in a formatter](Dozer/Formatters/ByMembersFormatter.cs). To completely override the representation of a type, a custom formatter can be created. This formatter can be registered in two ways: using an [attribute](Dozer/Formatters/DefaultFormatterAttribute.cs), or by adding a resolver to the [`DozerSerializerOptions`](Dozer/DozerSerializerOptions.cs).
+
+```csharp
+// This attribute will replace the by-member formatter
+[DefaultFormatter(MyClassFormatter)]
+private class MyClass
+{
+    private sealed class MyClassFormatter : IFormatter<MyClass>
+    {
+        public MyClassFormatter(DozerSerializer serializer) { }
+
+        public void Deserialize(BufferReader reader, out MyClass value)
+        {
+            // Important! To support cyclic references, the output value
+            // should be assigned before deserializing any child objects.
+            value = new MyClass();
+
+            // Custom logic here
+        }
+
+        public void Serialize(BufferWriter writer, in MyClass value)
+        {
+            // Custom logic here
+        }
+    }
+}
+```
+
 ### Features
 
 #### Comparison with other popular libraries
@@ -47,6 +143,7 @@ For documentation about all functionality included in Dozer, please see the [com
 | [Blitting `unmanaged` types](## "Whether unmanaged types can be copied from memory verbatim") | ❌ | 🟡 (unsafe handling of padding, `bool`, and `decimal`) | ✔️ |
 | [Thread-safe](## "Whether a single serializer instance can be used across threads") | ✔️ | ❌ | ✔️ |
 | [Standard types](## "Whether the library has out-of-the-box serializers for C# standard library types") | ✔️ | 🟡 (missing types from .NET 6+) | ✔️ |
+| [Can serialize `System.Reflection` types](## "Whether the library can serialize assemblies, types, fields, etc.") | ❌ | ✔️ | ✔️ |
 | [AoT support](## "Whether the library can work without dynamic code generation") | ✔️  | ✔️ | ❌ |
 | [Version tolerance](## "Whether the fields of a single type can be changed without invalidating existing serialized data") | ✔️  | ✔️ | ❌ |
 | [Last update](## "The last time that the repository had a commit") | ![Last Commit](https://img.shields.io/github/last-commit/MessagePack-CSharp/MessagePack-CSharp?color=lightgrey&label=Last%20commit&style=flat) | ![Last Commit](https://img.shields.io/github/last-commit/rikimaru0345/Ceras?color=lightgrey&label=Last%20commit&style=flat) | ![Last Commit](https://img.shields.io/github/last-commit/DouglasDwyer/Dozer?color=lightgrey&label=Last%20commit&style=flat) |

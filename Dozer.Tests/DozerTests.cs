@@ -121,6 +121,46 @@ namespace DouglasDwyer.Dozer.Tests
             });
         }
 
+        /// <summary>
+        /// Tests that <see cref="FieldInfo"/> objects can be serialized and deserialized.
+        /// </summary>
+        [TestMethod]
+        public void TestSerializeField()
+        {
+            var serializer = new DozerSerializer();
+            var target = typeof(TestCustom).GetField(nameof(TestCustom.Deserialized));
+            var bytes = serializer.Serialize(target);
+            var deserialized = serializer.Deserialize<FieldInfo>(bytes);
+            Assert.AreEqual(target, deserialized);
+        }
+
+        /// <summary>
+        /// Tests that <see cref="PropertyInfo"/> objects can be serialized and deserialized.
+        /// </summary>
+        [TestMethod]
+        public void TestSerializeProperty()
+        {
+            var serializer = new DozerSerializer();
+            var target = typeof(KeyValuePair<,>).GetProperty(nameof(KeyValuePair<int, int>.Key));
+            var bytes = serializer.Serialize(target);
+            var deserialized = serializer.Deserialize<PropertyInfo>(bytes);
+            Assert.AreEqual(target, deserialized);
+        }
+
+        /// <summary>
+        /// Tests that <see cref="PropertyInfo"/> objects can be serialized and deserialized.
+        /// </summary>
+        [TestMethod]
+        public void TestSerializeParameter()
+        {
+            var serializer = new DozerSerializer();
+            var target = typeof(TestCustom).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, [typeof(bool)])!
+                .GetParameters().Single();
+            var bytes = serializer.Serialize(target);
+            var deserialized = serializer.Deserialize<ParameterInfo>(bytes);
+            Assert.AreEqual(target, deserialized);
+        }
+
         [DefaultFormatter(typeof(TestCustomFormatter))]
         private class TestCustom
         {
