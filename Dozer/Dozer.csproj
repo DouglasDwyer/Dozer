@@ -21,7 +21,14 @@
 	<PackageTags>serialization csharp binary collections arrays polymorphism serialization-library csharp-library</PackageTags>
 	<Nullable>enable</Nullable>
 	<WarningsAsErrors>Nullable</WarningsAsErrors>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
