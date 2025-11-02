@@ -110,9 +110,19 @@ The logic for serializing a type by its members (and interpreting the aforementi
 [DefaultFormatter(MyClassFormatter)]
 private class MyClass
 {
+    private object _someData;
+
     private sealed class MyClassFormatter : IFormatter<MyClass>
     {
-        public MyClassFormatter(DozerSerializer serializer) { }
+        private readonly IFormatter<object> _someDataFormatter;
+
+        // Formatters may be declared with either a parameterless constructor
+        // or a constructor accepting the serializer
+        public MyClassFormatter(DozerSerializer serializer)
+        {
+            // The serializer can be used to get formatters for children
+            _someDataFormatter = serializer.GetFormatter<object>();
+        }
 
         public void Deserialize(BufferReader reader, out MyClass value)
         {
@@ -120,11 +130,13 @@ private class MyClass
             // should be assigned before deserializing any child objects.
             value = new MyClass();
 
+            _someDataFormatter.Deserialize(reader, value._someData);
             // Custom logic here
         }
 
         public void Serialize(BufferWriter writer, in MyClass value)
         {
+            _someDataFormatter.Serialize(writer, value._someData);
             // Custom logic here
         }
     }
