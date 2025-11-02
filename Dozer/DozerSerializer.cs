@@ -86,7 +86,6 @@ public sealed class DozerSerializer
         new BlitResolver(),
         new EnumResolver(),
         new SingletonResolver(new PrimitiveFormatter()),
-        // todo: allow serializing names or not (if names, then no blitting..!)
         new ByMembersResolver(),
     ];
 
