@@ -165,7 +165,7 @@ public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
         checked
         {
             var result = 1;
-            
+
             foreach (var value in values)
             {
                 result *= value;

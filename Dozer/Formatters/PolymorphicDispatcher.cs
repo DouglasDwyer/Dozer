@@ -141,7 +141,7 @@ internal static class PolymorphicDispatcher
 
             _contentFormatter = contentFormatter;
         }
-        
+
         /// <inheritdoc/>
         public void Deserialize(BufferReader reader, out object value)
         {

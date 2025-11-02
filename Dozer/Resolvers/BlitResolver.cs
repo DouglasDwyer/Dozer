@@ -1,6 +1,5 @@
 ﻿using DouglasDwyer.Dozer.Formatters;
 using System;
-using System.Collections.Immutable;
 
 namespace DouglasDwyer.Dozer.Resolvers;
 

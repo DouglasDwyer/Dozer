@@ -281,7 +281,7 @@ public ref struct BufferReader
         var bits = 8 * bytes;
         var result = 0ul;
         var shift = 0;
-        
+
         while (true)
         {
             var next = ReadUInt8();

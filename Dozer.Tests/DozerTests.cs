@@ -1,6 +1,5 @@
-﻿using System.Reflection;
-
-using DouglasDwyer.Dozer.Formatters;
+﻿using DouglasDwyer.Dozer.Formatters;
+using System.Reflection;
 
 namespace DouglasDwyer.Dozer.Tests
 {

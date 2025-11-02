@@ -1,9 +1,6 @@
 ﻿using System;
-using System.IO.Hashing;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
 
 namespace DouglasDwyer.Dozer.Formatters;
 

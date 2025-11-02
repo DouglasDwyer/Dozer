@@ -27,7 +27,7 @@ public sealed class MemoryFormatter<T, A> : IFormatter<A>
     /// <param name="serializer">The associated serializer.</param>
     public MemoryFormatter(DozerSerializer serializer)
     {
-        switch(default(A))
+        switch (default(A))
         {
             case ArraySegment<T>:
             case Memory<T>:

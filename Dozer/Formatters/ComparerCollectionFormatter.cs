@@ -29,7 +29,7 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
     /// Creates a new, empty collection.
     /// </summary>
     private readonly Func<int, object?, A> _newCollection;
-    
+
     /// <summary>
     /// Gets the comparer (if any) associated with a given collection.
     /// </summary>
@@ -69,7 +69,7 @@ public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A
 
         _comparerFormatter = serializer.GetFormatter<object?>();
         _elementFormatter = serializer.GetFormatter<T?>();
-        
+
         _getComparer = (Func<A, object?>)Delegate.CreateDelegate(typeof(Func<A, object?>), comparerProperty.GetMethod);
 
         var countParam = Expression.Variable(typeof(int), "count");

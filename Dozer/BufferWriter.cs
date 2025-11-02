@@ -239,7 +239,7 @@ public ref struct BufferWriter
     {
         Span<int> output = stackalloc int[sizeof(decimal) / sizeof(int)];
         decimal.GetBits(value, output);
-        
+
         foreach (var section in output)
         {
             WriteInt32(section);

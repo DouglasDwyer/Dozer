@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Linq;
 
 namespace DouglasDwyer.Dozer.Formatters;
@@ -30,7 +29,7 @@ public sealed class ImmutableQueueFormatter<T> : IFormatter<ImmutableQueue<T?>>
     public void Deserialize(BufferReader reader, out ImmutableQueue<T?> value)
     {
         _arrayFormatter.Deserialize(reader, out var array);
-        value = [..array];
+        value = [.. array];
     }
 
     /// <inheritdoc/>

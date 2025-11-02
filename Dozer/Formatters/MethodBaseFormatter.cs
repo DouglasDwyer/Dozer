@@ -172,45 +172,45 @@ public sealed class MethodBaseFormatter : IFormatter<MethodBase>
         switch (metadata.Kind)
         {
             case ParameterKind.SZArray:
-            {
-                var elementMatcher = ReadGenericParameterMatcher(reader);
-                return ty => ty.IsSZArray && elementMatcher(ty.GetElementType()!);
-            }
+                {
+                    var elementMatcher = ReadGenericParameterMatcher(reader);
+                    return ty => ty.IsSZArray && elementMatcher(ty.GetElementType()!);
+                }
             case ParameterKind.Array:
-            {
-                var dimensions = metadata.Dimensions;
-                var elementMatcher = ReadGenericParameterMatcher(reader);
-                return ty => !ty.IsSZArray && ty.IsArray && ty.GetArrayRank() == dimensions && elementMatcher(ty.GetElementType()!);
-            }
+                {
+                    var dimensions = metadata.Dimensions;
+                    var elementMatcher = ReadGenericParameterMatcher(reader);
+                    return ty => !ty.IsSZArray && ty.IsArray && ty.GetArrayRank() == dimensions && elementMatcher(ty.GetElementType()!);
+                }
             case ParameterKind.TypeParameter:
-            {
-                var index = metadata.GenericIndex;
-                var typeMatcher = ReadGenericParameterMatcher(reader);
-                return ty => ty.IsGenericTypeParameter && ty.GenericParameterPosition == index && typeMatcher(ty.DeclaringType!);
-            }
+                {
+                    var index = metadata.GenericIndex;
+                    var typeMatcher = ReadGenericParameterMatcher(reader);
+                    return ty => ty.IsGenericTypeParameter && ty.GenericParameterPosition == index && typeMatcher(ty.DeclaringType!);
+                }
             case ParameterKind.MethodParameter:
-            {
-                var index = metadata.GenericIndex;
-                return ty => ty.IsGenericMethodParameter && ty.GenericParameterPosition == index;
-            }
+                {
+                    var index = metadata.GenericIndex;
+                    return ty => ty.IsGenericMethodParameter && ty.GenericParameterPosition == index;
+                }
             case ParameterKind.ConstructedGeneric:
             default:
-            {
-                _typeFormatter.Deserialize(reader, out var definition);
-                var parameterMatchers = new Func<Type, bool>[definition!.GetGenericArguments().Length];
-
-                for (var i = 0; i < parameterMatchers.Length; i++)
                 {
-                    parameterMatchers[i] = ReadGenericParameterMatcher(reader);
+                    _typeFormatter.Deserialize(reader, out var definition);
+                    var parameterMatchers = new Func<Type, bool>[definition!.GetGenericArguments().Length];
+
+                    for (var i = 0; i < parameterMatchers.Length; i++)
+                    {
+                        parameterMatchers[i] = ReadGenericParameterMatcher(reader);
+                    }
+
+                    return ty =>
+                    {
+                        var actualDefinition = ty.IsConstructedGenericType ? ty.GetGenericTypeDefinition() : ty;
+                        return actualDefinition == definition
+                            && parameterMatchers.Zip(ty.GetGenericArguments()).All(x => x.First(x.Second));
+                    };
                 }
-
-                return ty =>
-                {
-                    var actualDefinition = ty.IsConstructedGenericType ? ty.GetGenericTypeDefinition() : ty;
-                    return actualDefinition == definition
-                        && parameterMatchers.Zip(ty.GetGenericArguments()).All(x => x.First(x.Second));
-                };
-            }
         }
     }
 

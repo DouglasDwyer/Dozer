@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -64,78 +62,78 @@ public sealed class TypeFormatter : IFormatter<Type>
         switch (metadata.Kind)
         {
             case TypeKind.SZArray:
-            {
-                _typeReferenceFormatter.Deserialize(reader, out var element);
-                value = element.MakeArrayType();
-                break;
-            }
-            case TypeKind.Array:
-            {
-                _typeReferenceFormatter.Deserialize(reader, out var element);
-                value = element.MakeArrayType(metadata.Dimensions);
-                break;
-            }
-            case TypeKind.TypeParameter:
-            {
-                _typeReferenceFormatter.Deserialize(reader, out var parent);
-                value = parent!.GetGenericArguments()[metadata.GenericIndex];
-                break;
-            }
-            case TypeKind.MethodParameter:
-            {
-                _methodFormatter.Deserialize(reader, out var parent);
-                value = parent!.GetGenericArguments()[metadata.GenericIndex];
-                break;
-            }
-            case TypeKind.ConstructedGeneric:
-            {
-                _typeReferenceFormatter.Deserialize(reader, out var definition);
-
-                var typeCount = _genericArgumentsCache.GetValue(definition!, x => x.GetGenericArguments()).Length;
-                var types = new Type[typeCount];
-
-                for (var i = 0; i < typeCount; i++)
                 {
-                    _typeReferenceFormatter.Deserialize(reader, out var argument);
-                    types[i] = argument;
+                    _typeReferenceFormatter.Deserialize(reader, out var element);
+                    value = element.MakeArrayType();
+                    break;
                 }
+            case TypeKind.Array:
+                {
+                    _typeReferenceFormatter.Deserialize(reader, out var element);
+                    value = element.MakeArrayType(metadata.Dimensions);
+                    break;
+                }
+            case TypeKind.TypeParameter:
+                {
+                    _typeReferenceFormatter.Deserialize(reader, out var parent);
+                    value = parent!.GetGenericArguments()[metadata.GenericIndex];
+                    break;
+                }
+            case TypeKind.MethodParameter:
+                {
+                    _methodFormatter.Deserialize(reader, out var parent);
+                    value = parent!.GetGenericArguments()[metadata.GenericIndex];
+                    break;
+                }
+            case TypeKind.ConstructedGeneric:
+                {
+                    _typeReferenceFormatter.Deserialize(reader, out var definition);
 
-                value = definition.MakeGenericType(types);
-                break;
+                    var typeCount = _genericArgumentsCache.GetValue(definition!, x => x.GetGenericArguments()).Length;
+                    var types = new Type[typeCount];
+
+                    for (var i = 0; i < typeCount; i++)
+                    {
+                        _typeReferenceFormatter.Deserialize(reader, out var argument);
+                        types[i] = argument;
+                    }
+
+                    value = definition.MakeGenericType(types);
+                    break;
                 }
             case TypeKind.BuiltinDefinition:
-            {
-                var id = reader.ReadUInt16();
-                if (!BuiltinTypes.TryGetType(id, out value!))
                 {
-                    throw new TypeLoadException("Could not find builtin type by ID");
+                    var id = reader.ReadUInt16();
+                    if (!BuiltinTypes.TryGetType(id, out value!))
+                    {
+                        throw new TypeLoadException("Could not find builtin type by ID");
+                    }
+                    break;
                 }
-                break;
-            }
             case TypeKind.KnownDefinition:
-            {
-                var id = reader.ReadUInt64();
-                if (!_knownTypes.TryGetObject(id, out value!))
                 {
-                    throw new TypeLoadException($"Could not find well-known type by hash; an assembly may be missing from the ${nameof(DozerSerializerOptions.KnownAssemblies)} list");
+                    var id = reader.ReadUInt64();
+                    if (!_knownTypes.TryGetObject(id, out value!))
+                    {
+                        throw new TypeLoadException($"Could not find well-known type by hash; an assembly may be missing from the ${nameof(DozerSerializerOptions.KnownAssemblies)} list");
+                    }
+                    break;
                 }
-                break;
-            }
             case TypeKind.Definition:
             default:
-            {
-                var fullName = reader.ReadString();
-                _assemblyFormatter.Deserialize(reader, out var assembly);
-                var result = assembly.GetType(fullName);
-
-                if (result is null)
                 {
-                    throw new TypeLoadException($"Unable to load type {fullName} from {assembly.FullName}");
-                }
+                    var fullName = reader.ReadString();
+                    _assemblyFormatter.Deserialize(reader, out var assembly);
+                    var result = assembly.GetType(fullName);
 
-                value = result;
-                break;
-            }
+                    if (result is null)
+                    {
+                        throw new TypeLoadException($"Unable to load type {fullName} from {assembly.FullName}");
+                    }
+
+                    value = result;
+                    break;
+                }
         }
     }
 
@@ -166,7 +164,7 @@ public sealed class TypeFormatter : IFormatter<Type>
         {
             writer.WriteUInt8((byte)TypeMetadata.ConstructedGeneric());
             _typeReferenceFormatter.Serialize(writer, value.GetGenericTypeDefinition());
-            
+
             foreach (var ty in _genericArgumentsCache.GetValue(value, x => x.GetGenericArguments()))
             {
                 _typeReferenceFormatter.Serialize(writer, ty);

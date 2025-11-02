@@ -60,7 +60,7 @@ public abstract class ImmutableCollectionFormatterBase<T, A, B> : IFormatter<A> 
     /// <param name="count">The number of elements that the collection will contain.</param>
     /// <returns>A mutable builder.</returns>
     protected abstract B DeserializeBuilder(BufferReader reader, int count);
-    
+
     /// <summary>
     /// Writes any data to <paramref name="writer"/> necessary to create a new builder.
     /// </summary>

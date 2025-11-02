@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.HighPerformance.Buffers;
-using System;
+﻿using System;
 using System.Numerics;
 
 namespace DouglasDwyer.Dozer.Formatters;

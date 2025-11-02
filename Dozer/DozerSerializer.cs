@@ -226,7 +226,7 @@ public sealed class DozerSerializer
     public T Deserialize<T>(ReadOnlySpan<byte> data)
     {
         var result = Deserialize<T>(ref data);
-        
+
         if (0 < data.Length)
         {
             throw new InvalidDataException("Deserialization did not consume all bytes in the provided data");

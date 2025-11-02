@@ -30,7 +30,7 @@ public sealed class ImmutableStackFormatter<T> : IFormatter<ImmutableStack<T?>>
     public void Deserialize(BufferReader reader, out ImmutableStack<T?> value)
     {
         _arrayFormatter.Deserialize(reader, out var array);
-        value = [..array.Reverse()];
+        value = [.. array.Reverse()];
     }
 
     /// <inheritdoc/>
