@@ -1,4 +1,6 @@
+.DS_Store
 .vs/
+_site/
 bin/
 obj/
 TestProject/
