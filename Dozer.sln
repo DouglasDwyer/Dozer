@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36511.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{932C6672-48BA-4B51-A434-77242324A8A9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dozer", "Dozer\Dozer.csproj", "{0A27B3B5-A023-CBCE-756E-235B997FA386}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dozer.Tests", "Dozer.Tests\Dozer.Tests.csproj", "{17CF1FB2-A070-8DC5-1455-FC44682D7D81}"
@@ -15,10 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{932C6672-48BA-4B51-A434-77242324A8A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{932C6672-48BA-4B51-A434-77242324A8A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{932C6672-48BA-4B51-A434-77242324A8A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{932C6672-48BA-4B51-A434-77242324A8A9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0A27B3B5-A023-CBCE-756E-235B997FA386}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0A27B3B5-A023-CBCE-756E-235B997FA386}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A27B3B5-A023-CBCE-756E-235B997FA386}.Release|Any CPU.ActiveCfg = Release|Any CPU
