@@ -5,7 +5,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes and deserializes <see cref="DateTimeOffset"/> instances.
 /// </summary>
-public sealed class DateTimeOffsetFormatter : IFormatter<DateTimeOffset>
+internal sealed class DateTimeOffsetFormatter : IFormatter<DateTimeOffset>
 {
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out DateTimeOffset value)

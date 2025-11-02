@@ -6,7 +6,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes and deserializes <see cref="Module"/> objects.
 /// </summary>
-public sealed class ModuleFormatter : IFormatter<Module>
+internal sealed class ModuleFormatter : IFormatter<Module>
 {
     /// <summary>
     /// Serializes assembly objects.

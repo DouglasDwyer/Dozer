@@ -12,7 +12,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="V">
 /// The value type being serialized.
 /// </typeparam>
-public sealed class ImmutableSortedDictionaryFormatter<K, V> : ImmutableCollectionFormatterBase<KeyValuePair<K, V?>, ImmutableSortedDictionary<K, V?>, ImmutableSortedDictionary<K, V?>.Builder> where K : notnull
+internal sealed class ImmutableSortedDictionaryFormatter<K, V> : ImmutableCollectionFormatterBase<KeyValuePair<K, V?>, ImmutableSortedDictionary<K, V?>, ImmutableSortedDictionary<K, V?>.Builder> where K : notnull
 {
     /// <summary>
     /// Gets the formatter to use for serializing key comparers.

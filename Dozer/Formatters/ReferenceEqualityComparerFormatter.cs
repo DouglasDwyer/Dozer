@@ -5,7 +5,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes <see cref="ReferenceEqualityComparer"/> objects.
 /// </summary>
-public sealed class ReferenceEqualityComparerFormatter : IFormatter<ReferenceEqualityComparer>
+internal sealed class ReferenceEqualityComparerFormatter : IFormatter<ReferenceEqualityComparer>
 {
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out ReferenceEqualityComparer value)

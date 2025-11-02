@@ -9,7 +9,7 @@ namespace DouglasDwyer.Dozer.Resolvers;
 /// <summary>
 /// Provides formatters for types implementing <see cref="ICollection{T}"/>.
 /// </summary>
-public sealed class CollectionResolver : IFormatterResolver
+internal sealed class CollectionResolver : IFormatterResolver
 {
     /// <inheritdoc/>
     public IFormatter? GetFormatter(DozerSerializer serializer, Type type)

@@ -5,7 +5,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes <see cref="CultureInfo"/> instances.
 /// </summary>
-public sealed class CultureInfoFormatter : IFormatter<CultureInfo>
+internal sealed class CultureInfoFormatter : IFormatter<CultureInfo>
 {
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out CultureInfo value)

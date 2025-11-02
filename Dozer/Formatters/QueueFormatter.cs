@@ -7,7 +7,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// Formats <see cref="Queue{T}"/> objects.
 /// </summary>
 /// <typeparam name="T">The queue element type.</typeparam>
-public sealed class QueueFormatter<T> : IFormatter<Queue<T?>>
+internal sealed class QueueFormatter<T> : IFormatter<Queue<T?>>
 {
     /// <summary>
     /// Formatter for serializing list elements one at a time.

@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// Formats <see cref="Stack{T}"/> objects.
 /// </summary>
 /// <typeparam name="T">The stack element type.</typeparam>
-public sealed class StackFormatter<T> : IFormatter<Stack<T?>>
+internal sealed class StackFormatter<T> : IFormatter<Stack<T?>>
 {
     /// <summary>
     /// Formatter for serializing list elements one at a time.

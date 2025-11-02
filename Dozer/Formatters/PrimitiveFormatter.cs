@@ -5,7 +5,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Handles encoding of primitive types.
 /// </summary>
-public sealed class PrimitiveFormatter :
+internal sealed class PrimitiveFormatter :
     IFormatter<byte>,
     IFormatter<ushort>,
     IFormatter<uint>,

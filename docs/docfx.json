@@ -4,7 +4,7 @@
     {
       "src": [
         {
-          "src": "../../Dozer",
+          "src": "../Dozer",
           "files": [
             "**/*.csproj"
           ]

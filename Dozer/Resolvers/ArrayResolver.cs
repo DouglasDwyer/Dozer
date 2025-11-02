@@ -6,7 +6,7 @@ namespace DouglasDwyer.Dozer.Resolvers;
 /// <summary>
 /// Create formatters derived from <see cref="ArrayFormatter{T, A}"/>.
 /// </summary>
-public sealed class ArrayResolver : IFormatterResolver
+internal sealed class ArrayResolver : IFormatterResolver
 {
     /// <inheritdoc/>
     public IFormatter? GetFormatter(DozerSerializer serializer, Type type)

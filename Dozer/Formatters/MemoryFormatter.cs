@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 /// <typeparam name="T">The element type.</typeparam>
 /// <typeparam name="A">The span-like type.</typeparam>
-public sealed class MemoryFormatter<T, A> : IFormatter<A>
+internal sealed class MemoryFormatter<T, A> : IFormatter<A>
 {
     /// <summary>
     /// Formatter for serializing elements one at a time.

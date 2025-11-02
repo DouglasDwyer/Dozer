@@ -7,7 +7,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes <see cref="Assembly"/> objects by their name and version.
 /// </summary>
-public sealed class AssemblyFormatter : IFormatter<Assembly>
+internal sealed class AssemblyFormatter : IFormatter<Assembly>
 {
     /// <summary>
     /// Where to find new assemblies.

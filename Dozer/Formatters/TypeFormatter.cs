@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes <see cref="Type"/> objects, including arrays and generics.
 /// </summary>
-public sealed class TypeFormatter : IFormatter<Type>
+internal sealed class TypeFormatter : IFormatter<Type>
 {
     /// <summary>
     /// Formats assembly references.

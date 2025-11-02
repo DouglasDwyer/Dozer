@@ -9,7 +9,7 @@ namespace DouglasDwyer.Dozer.Resolvers;
 /// <summary>
 /// Generates formatters for collection types that have an <see cref="IComparer{T}"/> <see cref="IEqualityComparer{T}"/>.
 /// </summary>
-public sealed class ComparerCollectionResolver : IFormatterResolver
+internal sealed class ComparerCollectionResolver : IFormatterResolver
 {
     /// <summary>
     /// Collection types supported by this resolver.

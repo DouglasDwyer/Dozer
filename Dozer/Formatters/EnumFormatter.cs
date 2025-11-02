@@ -7,7 +7,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 /// <typeparam name="U">The integral representation of the enum.</typeparam>
 /// <typeparam name="T">The enum to serialize.</typeparam>
-public sealed class EnumFormatter<U, T> : IFormatter<T> where U : struct where T : struct, Enum
+internal sealed class EnumFormatter<U, T> : IFormatter<T> where U : struct where T : struct, Enum
 {
     /// <summary>
     /// The formatter to use for the enum's inner representation.

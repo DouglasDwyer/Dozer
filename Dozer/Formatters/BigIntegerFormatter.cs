@@ -6,7 +6,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes and deserializes <see cref="BigInteger"/> instances.
 /// </summary>
-public sealed class BigIntegerFormatter : IFormatter<BigInteger>
+internal sealed class BigIntegerFormatter : IFormatter<BigInteger>
 {
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out BigInteger value)

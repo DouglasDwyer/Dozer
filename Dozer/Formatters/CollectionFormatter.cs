@@ -7,7 +7,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 /// <typeparam name="T">The element type.</typeparam>
 /// <typeparam name="A">The type of the collection itself.</typeparam>
-public sealed class CollectionFormatter<T, A> : IFormatter<A> where A : ICollection<T?>, new()
+internal sealed class CollectionFormatter<T, A> : IFormatter<A> where A : ICollection<T?>, new()
 {
     /// <summary>
     /// Formatter for serializing list elements one at a time.

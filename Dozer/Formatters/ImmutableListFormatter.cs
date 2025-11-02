@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="T">
 /// The element type being serialized.
 /// </typeparam>
-public sealed class ImmutableListFormatter<T> : ImmutableCollectionFormatterBase<T, ImmutableList<T?>, ImmutableList<T?>.Builder>
+internal sealed class ImmutableListFormatter<T> : ImmutableCollectionFormatterBase<T, ImmutableList<T?>, ImmutableList<T?>.Builder>
 {
     /// <summary>
     /// Creates a new formatter.

@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// Formats <see cref="List{T}"/> objects.
 /// </summary>
 /// <typeparam name="T">The list element type.</typeparam>
-public sealed class ListFormatter<T> : IFormatter<List<T?>>
+internal sealed class ListFormatter<T> : IFormatter<List<T?>>
 {
     /// <summary>
     /// Formatter for serializing list elements one at a time.

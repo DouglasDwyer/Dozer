@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Resolvers;
 /// <summary>
 /// Generates formatters for span-like types.
 /// </summary>
-public sealed class MemoryResolver : IFormatterResolver
+internal sealed class MemoryResolver : IFormatterResolver
 {
     /// <summary>
     /// The types supported by this resolver.

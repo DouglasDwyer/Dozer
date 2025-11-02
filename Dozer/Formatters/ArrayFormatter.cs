@@ -9,7 +9,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 /// <typeparam name="T">The element type of the array.</typeparam>
 /// <typeparam name="A">The array type itself.</typeparam>
-public sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
+internal sealed class ArrayFormatter<T, A> : IFormatter<A> where A : notnull
 {
     /// <summary>
     /// Formatter for serializing array elements one at a time.

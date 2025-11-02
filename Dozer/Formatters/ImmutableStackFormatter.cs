@@ -9,7 +9,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="T">
 /// The element type being serialized.
 /// </typeparam>
-public sealed class ImmutableQueueFormatter<T> : IFormatter<ImmutableQueue<T?>>
+internal sealed class ImmutableQueueFormatter<T> : IFormatter<ImmutableQueue<T?>>
 {
     /// <summary>
     /// The inner formatter.

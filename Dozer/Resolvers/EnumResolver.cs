@@ -6,7 +6,7 @@ namespace DouglasDwyer.Dozer.Resolvers;
 /// <summary>
 /// Create formatters derived from <see cref="EnumFormatter{U, T}"/>.
 /// </summary>
-public sealed class EnumResolver : IFormatterResolver
+internal sealed class EnumResolver : IFormatterResolver
 {
     /// <inheritdoc/>
     public IFormatter? GetFormatter(DozerSerializer serializer, Type type)

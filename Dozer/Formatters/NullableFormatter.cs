@@ -6,7 +6,7 @@
 /// <typeparam name="T">
 /// The inner value type.
 /// </typeparam>
-public sealed class NullableFormatter<T> : IFormatter<T?> where T : struct
+internal sealed class NullableFormatter<T> : IFormatter<T?> where T : struct
 {
     /// <summary>
     /// The formatter to use for non-null values.

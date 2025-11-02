@@ -8,7 +8,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes method references by their name and signature.
 /// </summary>
-public sealed class MethodBaseFormatter : IFormatter<MethodBase>
+internal sealed class MethodBaseFormatter : IFormatter<MethodBase>
 {
     /// <summary>
     /// Flags for reflection that will capture all members.

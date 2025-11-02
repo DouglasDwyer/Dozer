@@ -10,7 +10,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes a type by iterating over its individual members and serializing them.
 /// </summary>
-public class ByMembersFormatter<T> : IFormatter<T>
+internal class ByMembersFormatter<T> : IFormatter<T>
 {
     /// <summary>
     /// The <see cref="MethodInfo"/> for <see cref="RuntimeHelpers.GetUninitializedObject"/>.

@@ -9,7 +9,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="T">The element type.</typeparam>
 /// <typeparam name="A">The immutable collection type itself.</typeparam>
 /// <typeparam name="B">A mutable builder for the collection.</typeparam>
-public abstract class ImmutableCollectionFormatterBase<T, A, B> : IFormatter<A> where A : IReadOnlyCollection<T?> where B : ICollection<T?>
+internal abstract class ImmutableCollectionFormatterBase<T, A, B> : IFormatter<A> where A : IReadOnlyCollection<T?> where B : ICollection<T?>
 {
     /// <summary>
     /// Formatter for serializing list elements one at a time.

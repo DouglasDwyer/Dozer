@@ -11,7 +11,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// The type to be formatted. This must be a "blittable" type (it must be unmanaged,
 /// and either a primitive or a struct with blittable fields).
 /// </typeparam>
-public sealed class BlitFormatter<T> : IBlitFormatter, IFormatter<T>, ISpanFormatter<T> where T : unmanaged
+internal sealed class BlitFormatter<T> : IBlitFormatter, IFormatter<T>, ISpanFormatter<T> where T : unmanaged
 {
     /// <summary>
     /// Creates a new formatter.

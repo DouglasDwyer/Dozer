@@ -7,7 +7,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// </summary>
 /// <typeparam name="K">The key type.</typeparam>
 /// <typeparam name="V">The value type.</typeparam>
-public sealed class KeyValuePairFormatter<K, V> : IFormatter<KeyValuePair<K?, V?>>
+internal sealed class KeyValuePairFormatter<K, V> : IFormatter<KeyValuePair<K?, V?>>
 {
     /// <summary>
     /// Serializes keys.

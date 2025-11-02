@@ -6,7 +6,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Converts <see cref="Guid"/> instances.
 /// </summary>
-public sealed class GuidFormatter : IFormatter<Guid>
+internal sealed class GuidFormatter : IFormatter<Guid>
 {
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out Guid value)

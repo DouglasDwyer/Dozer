@@ -9,7 +9,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="T">
 /// The element type being serialized.
 /// </typeparam>
-public sealed class ImmutableHashSetFormatter<T> : ImmutableCollectionFormatterBase<T?, ImmutableHashSet<T?>, ImmutableHashSet<T?>.Builder>
+internal sealed class ImmutableHashSetFormatter<T> : ImmutableCollectionFormatterBase<T?, ImmutableHashSet<T?>, ImmutableHashSet<T?>.Builder>
 {
     /// <summary>
     /// Gets the formatter to use for serializing key comparers.

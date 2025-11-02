@@ -13,7 +13,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <typeparam name="K">The key type used for equality.</typeparam>
 /// <typeparam name="T">The element type of the collection.</typeparam>
 /// <typeparam name="A">The collection type itself.</typeparam>
-public sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A : ICollection<T?>
+internal sealed class ComparerCollectionFormatter<K, T, A> : IFormatter<A> where A : ICollection<T?>
 {
     /// <summary>
     /// Gets the formatter to use for serializing comparers.

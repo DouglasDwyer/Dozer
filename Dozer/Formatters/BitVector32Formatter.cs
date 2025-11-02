@@ -5,7 +5,7 @@ namespace DouglasDwyer.Dozer.Formatters;
 /// <summary>
 /// Serializes and deserializes <see cref="BitVector32"/> instances.
 /// </summary>
-public sealed class BitVector32Formatter : IFormatter<BitVector32>
+internal sealed class BitVector32Formatter : IFormatter<BitVector32>
 {
     /// <inheritdoc/>
     public void Deserialize(BufferReader reader, out BitVector32 value)
