@@ -1,4 +1,4 @@
-name: Build and Deploy C# Docs
+name: Deploy docs
 
 on:
   push:
