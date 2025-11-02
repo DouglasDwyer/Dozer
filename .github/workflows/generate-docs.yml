@@ -27,12 +27,12 @@ jobs:
         run: dotnet tool update -g docfx
 
       - name: Build
-        run: dotnet build && docfx ./docfx.json
+        run: dotnet build && docfx docs/docfx.json
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: docs/_site
 
   deploy-docs:
     needs: build-docs
