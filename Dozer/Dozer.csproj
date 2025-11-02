@@ -9,14 +9,14 @@
     <Product>Dozer</Product>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Dozer is a fast, efficient, customizable C# binary serializer that can serialize absolutely anything.</Description>
+    <Description>General-purpose binary serializer for C#</Description>
     <PackageProjectUrl>https://github.com/DouglasDwyer/Dozer</PackageProjectUrl>
     <RepositoryUrl>https://github.com/DouglasDwyer/Dozer</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <NeutralLanguage>en</NeutralLanguage>
-    <AssemblyVersion>2.0.0</AssemblyVersion>
-    <FileVersion>2.0.0</FileVersion>
-	<Version>2.0.0</Version>
+    <AssemblyVersion>0.1.0</AssemblyVersion>
+    <FileVersion>0.1.0</FileVersion>
+	<Version>0.1.0</Version>
 	<PackageReleaseNotes></PackageReleaseNotes>
 	<PackageTags>serialization csharp binary collections arrays polymorphism serialization-library csharp-library</PackageTags>
 	<Nullable>enable</Nullable>
