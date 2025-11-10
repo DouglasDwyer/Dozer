@@ -50,14 +50,8 @@ public sealed class AttributeResolver : IFormatterResolver
         }
         else
         {
-            if (attribute.Formatter.GetConstructor([typeof(DozerSerializer)]) is not null)
-            {
-                return (IFormatter)Activator.CreateInstance(attribute.Formatter, serializer)!;
-            }
-            else
-            {
-                return (IFormatter)Activator.CreateInstance(attribute.Formatter)!;
-            }
+            var genericResolver = new GenericResolver(attribute.Formatter);
+            return genericResolver.GetFormatter(serializer, type);
         }
     }
 }

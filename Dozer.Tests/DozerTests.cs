@@ -92,6 +92,22 @@ namespace DouglasDwyer.Dozer.Tests
         }
 
         /// <summary>
+        /// Tests that the <see cref="DefaultFormatterAttribute"/> can be used to specify a custom formatter
+        /// with generic.
+        /// </summary>
+        [TestMethod]
+        public void TestDefaultFormatterAttributeGeneric()
+        {
+            var serializer = new DozerSerializer();
+
+            var bytes = serializer.Serialize(new TestCustomGeneric<int>());
+            var deserialized = serializer.Deserialize<TestCustomGeneric<int>>(bytes);
+
+            Assert.IsNotNull(deserialized);
+            Assert.IsTrue(deserialized.Deserialized);
+        }
+
+        /// <summary>
         /// Tests that a constructor's <see cref="MethodBase"/> can be serialized and deserialized.
         /// </summary>
         [TestMethod]
@@ -206,6 +222,29 @@ namespace DouglasDwyer.Dozer.Tests
                 }
 
                 public void Serialize(BufferWriter writer, in TestCustom2 value) { }
+            }
+        }
+
+        [DefaultFormatter(typeof(TestCustomGeneric<>.Formatter))]
+        private class TestCustomGeneric<T>
+        {
+            public readonly bool Deserialized;
+
+            public TestCustomGeneric() : this(false) { }
+
+            private TestCustomGeneric(bool deserialized)
+            {
+                Deserialized = deserialized;
+            }
+
+            private sealed class Formatter : IFormatter<TestCustomGeneric<T>>
+            {
+                public void Deserialize(BufferReader reader, out TestCustomGeneric<T> value)
+                {
+                    value = new TestCustomGeneric<T>(true);
+                }
+
+                public void Serialize(BufferWriter writer, in TestCustomGeneric<T> value) { }
             }
         }
     }
