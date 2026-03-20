@@ -177,6 +177,30 @@ namespace DouglasDwyer.Dozer.Tests
             Assert.AreEqual(target, deserialized);
         }
 
+        /// <summary>
+        /// Tests that a class containing a nullable struct field can be serialized.
+        /// Reproduces: ArgumentException / TypeLoadException when PolymorphicDispatcher
+        /// attempts MutableStructDispatcher&lt;Nullable&lt;T&gt;&gt;, which violates the struct constraint.
+        /// </summary>
+        [TestMethod]
+        public void TestSerializeClassWithNullableStructField()
+        {
+            var serializer = new DozerSerializer();
+
+            var value = new TestNullableField { MaybeNull = 2 };
+            var bytes = serializer.Serialize(value);
+            var deserialized = serializer.Deserialize<TestNullableField>(bytes);
+
+            Assert.IsNotNull(deserialized);
+            Assert.IsTrue(deserialized.MaybeNull.HasValue);
+            Assert.AreEqual(2, deserialized.MaybeNull.Value);
+        }
+
+        private class TestNullableField
+        {
+            public int? MaybeNull;
+        }
+
         [DefaultFormatter(typeof(TestCustomFormatter))]
         private class TestCustom
         {

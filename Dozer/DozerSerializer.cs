@@ -393,7 +393,12 @@ public sealed class DozerSerializer
             throw new MissingFormatterException(type);
         }
 
-        var polymorphicDispatcher = PolymorphicDispatcher.Create(type, contentFormatter);
+        // Nullable<T> cannot be directly boxed — boxing a Nullable<T> with a value produces a boxed T,
+        // not a boxed Nullable<T>. Use the underlying type's polymorphic dispatcher instead.
+        var underlyingType = Nullable.GetUnderlyingType(type);
+        var polymorphicDispatcher = underlyingType is not null
+            ? GetPolymorphicDispatcher(underlyingType)
+            : PolymorphicDispatcher.Create(type, contentFormatter);
         return new ContentFormatters { ContentFormatter = contentFormatter, PolymorphicDispatcher = polymorphicDispatcher };
     }
 
