@@ -12,6 +12,11 @@ namespace DouglasDwyer.Dozer;
 public ref struct BufferReader
 {
     /// <summary>
+    /// Gets a view over all remaining bytes, without advancing the cursor.
+    /// </summary>
+    public ReadOnlySpan<byte> Remaining => _data[_position..];
+
+    /// <summary>
     /// Shared deserializer state.
     /// </summary>
     internal readonly DeserializationContext Context;
