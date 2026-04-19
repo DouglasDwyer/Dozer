@@ -16,7 +16,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
-	<Version>0.2.3</Version>
+	<Version>0.2.4</Version>
 	<PackageReleaseNotes></PackageReleaseNotes>
 	<PackageTags>serialization csharp binary collections arrays polymorphism serialization-library csharp-library</PackageTags>
 	<Nullable>enable</Nullable>

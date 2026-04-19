@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -71,18 +71,7 @@ public sealed class GenericResolver : IFormatterResolver
         {
             if (equation.Solve(targetInterface, iface, out var substitutions))
             {
-                Type formatterType;
-                try
-                {
-                    formatterType = Definition.IsGenericType ? Definition.MakeGenericType(substitutions) : Definition;
-                }
-                catch (ArgumentException)
-                {
-                    // Failed to construct the type
-                    // This can occur if there are generic parameter constraints,
-                    // which are not accounted for by the equation solver.
-                    continue;
-                }
+                var formatterType = Definition.IsGenericType ? Definition.MakeGenericType(substitutions) : Definition;
 
                 var constructors = formatterType.GetConstructors(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
                 var result = TryInvokeConstructor(constructors, GetConstructorArgumentsWithSerializer(serializer))
@@ -119,33 +108,53 @@ public sealed class GenericResolver : IFormatterResolver
     /// The constructors from the concrete type instantiated from <see cref="Definition"/>.
     /// </param>
     /// <param name="arguments">
-    /// The arguments with which to call the constructor. These may be reorganized or modified
-    /// according to the method binding rules.
+    /// The arguments with which to call the constructor.
     /// </param>
     /// <returns>
     /// The formatter that was created, or <c>null</c> if no constructor was found.
     /// </returns>
     private IFormatter? TryInvokeConstructor(ConstructorInfo[] constructors, object?[] arguments)
     {
-        ConstructorInfo constructor;
-        try
+        foreach (var constructor in constructors)
         {
-            constructor = (ConstructorInfo)Type.DefaultBinder.BindToMethod(
-                BindingFlags.CreateInstance,
-                constructors,
-                ref arguments,
-                null,
-                null,
-                null,
-                out _
-            );
-        }
-        catch (MissingMethodException)
-        {
-            return null;
+            var parameters = constructor.GetParameters();
+            if (parameters.Length != arguments.Length)
+            {
+                continue;
+            }
+
+            // SelectMethod requires a Type[] rather than the actual arguments.
+            // For null arguments, use the parameter's own type so that SelectMethod
+            // accepts the position. Null is invalid for non-nullable value types,
+            // so those constructors are skipped entirely.
+            var types = new Type[arguments.Length];
+            for (var i = 0; i < arguments.Length; i++)
+            {
+                var arg = arguments[i];
+                if (arg is null)
+                {
+                    var paramType = parameters[i].ParameterType;
+
+                    if (paramType.IsValueType && Nullable.GetUnderlyingType(paramType) is null)
+                    {
+                        continue;
+                    }
+
+                    types[i] = paramType;
+                }
+                else
+                {
+                    types[i] = arg.GetType();
+                }
+            }
+
+            if (Type.DefaultBinder.SelectMethod(BindingFlags.CreateInstance, [constructor], types, null) is not null)
+            {
+                return (IFormatter)constructor.Invoke(arguments);
+            }
         }
 
-        return (IFormatter)constructor.Invoke(arguments);
+        return null;
     }
 
     /// <summary>
@@ -177,7 +186,8 @@ public sealed class GenericResolver : IFormatterResolver
         }
 
         /// <summary>
-        /// Finds the unique type substitution that will make the left-hand side equal to <paramref name="rhs"/>.
+        /// Finds the unique type substitution that will make the left-hand side equal to <paramref name="rhs"/>,
+        /// and verifies that the substitution satisfies all generic parameter constraints.
         /// </summary>
         /// <param name="lhs">The left-hand side of the equation.</param>
         /// <param name="rhs">The right-hand side of the equation.</param>
@@ -187,7 +197,7 @@ public sealed class GenericResolver : IFormatterResolver
         {
             Array.Fill(_substitutions, null);
 
-            if (FindSubstition(lhs, rhs) && AllSubstitutionsFound())
+            if (FindSubstition(lhs, rhs) && AllSubstitutionsFound() && SatisfiesConstraints())
             {
                 result = _substitutions!;
                 return true;
@@ -267,6 +277,99 @@ public sealed class GenericResolver : IFormatterResolver
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks that every substitution satisfies the constraints declared on its generic parameter.
+        /// Handles <c>class</c>, <c>struct</c>, <c>new()</c>, and base-class/interface constraints.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if all substitutions are valid for their parameters; otherwise <c>false</c>.
+        /// </returns>
+        private bool SatisfiesConstraints()
+        {
+            for (var i = 0; i < _parameters.Length; i++)
+            {
+                var param = _parameters[i];
+                var subst = _substitutions[i]!;
+
+                if (!SatisfiesReferenceTypeConstraint(param, subst)
+                    || !SatisfiesNotNullableValueTypeConstraint(param, subst)
+                    || !SatisfiesDefaultConstructorConstraint(param, subst)
+                    || !SatisfiesTypeConstraints(param, subst))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks the <c>class</c> constraint: the substitution must be a reference type.
+        /// </summary>
+        private static bool SatisfiesReferenceTypeConstraint(Type param, Type subst)
+            => !param.GenericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint)
+                || !subst.IsValueType;
+
+        /// <summary>
+        /// Checks the <c>struct</c> constraint: the substitution must be a non-nullable value type.
+        /// </summary>
+        private static bool SatisfiesNotNullableValueTypeConstraint(Type param, Type subst)
+            => !param.GenericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint)
+                || (subst.IsValueType && !(subst.IsGenericType && subst.GetGenericTypeDefinition() == typeof(Nullable<>)));
+
+        /// <summary>
+        /// Checks the <c>new()</c> constraint: the substitution must have a public parameterless constructor.
+        /// </summary>
+        private static bool SatisfiesDefaultConstructorConstraint(Type param, Type subst)
+            => !param.GenericParameterAttributes.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+                || subst.IsValueType
+                || subst.GetConstructor(Type.EmptyTypes) is not null;
+
+        /// <summary>
+        /// Checks the base-class and interface constraints: the substitution must be assignable to each.
+        /// </summary>
+        private bool SatisfiesTypeConstraints(Type param, Type subst)
+        {
+            foreach (var constraint in param.GetGenericParameterConstraints())
+            {
+                if (!ApplySubstitutions(constraint).IsAssignableFrom(subst))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Recursively replaces every generic parameter in <paramref name="type"/> with its solved substitution.
+        /// </summary>
+        private Type ApplySubstitutions(Type type)
+        {
+            if (type.IsGenericParameter)
+            {
+                var position = type.GenericParameterPosition;
+                if (position >= _parameters.Length || _parameters[position] != type)
+                {
+                    throw new InvalidOperationException($"Generic parameter '{type.Name}' at position {position} does not belong to this resolver's type definition.");
+                }
+                return _substitutions[position]!;
+            }
+
+            if (type.IsConstructedGenericType)
+            {
+                var args = type.GetGenericArguments();
+                var resolved = new Type[args.Length];
+                for (var i = 0; i < args.Length; i++)
+                {
+                    resolved[i] = ApplySubstitutions(args[i]);
+                }
+                return type.GetGenericTypeDefinition().MakeGenericType(resolved);
+            }
+
+            return type;
         }
 
         /// <summary>
