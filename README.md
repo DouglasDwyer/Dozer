@@ -39,7 +39,7 @@ For documentation about all functionality included in Dozer, please see the [com
 
 #### Included fields and properties
 
-By default, Dozer will serialize anytype with a public parameterless constructor. Dozer will include all public fields, auto get-set properties, and auto get-init properties.
+By default, Dozer will serialize any type with a public parameterless constructor. Dozer will include all public fields, auto get-set properties, and auto get-init properties.
 
 ```csharp
 public class Foo
@@ -130,7 +130,7 @@ private class MyClass
             // should be assigned before deserializing any child objects.
             value = new MyClass();
 
-            _someDataFormatter.Deserialize(reader, value._someData);
+            _someDataFormatter.Deserialize(reader, out value._someData);
             // Custom logic here
         }
 
