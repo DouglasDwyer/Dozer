@@ -134,11 +134,6 @@ public sealed class DozerSerializer
     /// </exception>
     public DozerSerializer(DozerSerializerOptions options)
     {
-        if (!RuntimeFeature.IsDynamicCodeSupported)
-        {
-            throw new PlatformNotSupportedException($"${nameof(DozerSerializer)} requires runtime support for dynamic code generation");
-        }
-
         _contentFormatters = new ConditionalWeakTable<Type, ContentFormatters>();
         _options = options;
         _referenceFormatters = new ConditionalWeakTable<Type, IFormatter>();
